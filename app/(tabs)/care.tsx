@@ -1,132 +1,172 @@
 // app/(tabs)/care.tsx
-import { StyleSheet, View, Alert } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import ActionButton from '@/components/ActionButton';
 import { useHippo } from '@/context/HippoContext';
+import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function CareScreen() {
   const { hippo, feed, clean, play, sleep } = useHippo();
 
   const handleFeed = () => {
     feed();
-    Alert.alert('🍎 Fed!', 'Your hippo enjoyed the meal!');
+    Alert.alert('🍖 Накормлено!', 'Бегемотик доволен!');
   };
 
   const handleClean = () => {
     clean();
-    Alert.alert('🛁 Cleaned!', 'Your hippo is now fresh and clean!');
+    Alert.alert('🛁 Помыто!', 'Бегемотик чистый и свежий!');
   };
 
   const handlePlay = () => {
     if ((hippo?.stats.energy || 0) < 20) {
-      Alert.alert('😴 Too Tired', 'Your hippo needs to sleep first!');
+      Alert.alert('😴 Устал', 'Бегемотику нужно спать!');
       return;
     }
     play();
-    Alert.alert('🎮 Played!', 'Your hippo had fun playing!');
+    Alert.alert('🎮 Поиграли!', 'Бегемотик весело играл!');
   };
 
   const handleSleep = () => {
     sleep();
-    Alert.alert('😴 Slept!', 'Your hippo is resting and gaining energy!');
+    Alert.alert('😴 Спит!', 'Бегемотик отдыхает и набирает энергию!');
   };
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Care for Your Hippo</ThemedText>
+      <ThemedText type="title" style={styles.title}>Уход за бегемотиком</ThemedText>
       <ThemedText style={styles.subtitle}>
-        Keep {hippo?.name || 'your hippo'} happy and healthy
+        Помогите {hippo?.name || 'бегемотику'} быть счастливым
       </ThemedText>
 
       <View style={styles.statsPreview}>
-        <ThemedText style={styles.statsTitle}>Current Stats:</ThemedText>
+        <ThemedText style={styles.statsTitle}>Текущие показатели:</ThemedText>
         {hippo && (
           <View style={styles.statsRow}>
-            <ThemedText>🍖 Hunger: {Math.round(hippo.stats.hunger)}%</ThemedText>
-            <ThemedText>⚡ Energy: {Math.round(hippo.stats.energy)}%</ThemedText>
-            <ThemedText>✨ Clean: {Math.round(hippo.stats.cleanliness)}%</ThemedText>
+            <ThemedText>🍖 Сытость: {Math.round(hippo.stats.satiety)}%</ThemedText>
+            <ThemedText>⚡ Энергия: {Math.round(hippo.stats.energy)}%</ThemedText>
+            <ThemedText>✨ Чистота: {Math.round(hippo.stats.cleanliness)}%</ThemedText>
           </View>
         )}
       </View>
 
       <View style={styles.actions}>
-        <ActionButton
-          title="Feed"
-          icon="fork.knife"
+        <ActionButtonWithIcon
+          title="Кормить"
+          icon={require('@/assets/images/eat_button.png')}
           onPress={handleFeed}
         />
-        <ActionButton
-          title="Clean"
-          icon="drop.fill"
+        <ActionButtonWithIcon
+          title="Мыть"
+          icon={require('@/assets/images/bath_button.png')}
           onPress={handleClean}
         />
-        <ActionButton
-          title="Play"
-          icon="gamecontroller.fill"
+        <ActionButtonWithIcon
+          title="Играть"
+          icon={require('@/assets/images/talk_button.png')}
           onPress={handlePlay}
           disabled={(hippo?.stats.energy || 0) < 20}
         />
-        <ActionButton
-          title="Sleep"
-          icon="moon.zzz.fill"
+        <ActionButtonWithIcon
+          title="Спать"
+          icon={require('@/assets/images/sleep_button.png')}
           onPress={handleSleep}
         />
       </View>
 
       <View style={styles.tips}>
-        <ThemedText style={styles.tipTitle}>Tips:</ThemedText>
-        <ThemedText style={styles.tip}>• Feed when hunger is above 60%</ThemedText>
-        <ThemedText style={styles.tip}>• Clean when cleanliness is below 40%</ThemedText>
-        <ThemedText style={styles.tip}>• Play when energy is above 20%</ThemedText>
-        <ThemedText style={styles.tip}>• Sleep when energy is below 30%</ThemedText>
+        <ThemedText style={styles.tipTitle}>💡 Советы:</ThemedText>
+        <ThemedText style={styles.tip}>• Кормите, когда сытость ниже 50%</ThemedText>
+        <ThemedText style={styles.tip}>• Мойте, когда чистота ниже 40%</ThemedText>
+        <ThemedText style={styles.tip}>• Играйте, когда энергия выше 20%</ThemedText>
+        <ThemedText style={styles.tip}>• Укладывайте спать, когда энергия ниже 30%</ThemedText>
       </View>
     </ThemedView>
+  );
+}
+
+function ActionButtonWithIcon({ title, icon, onPress, disabled = false }: any) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.button, disabled && styles.disabled]}
+    >
+      <Image source={icon} style={styles.buttonIcon} />
+      <ThemedText style={styles.buttonText}>{title}</ThemedText>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 16,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: 25,
+    fontSize: 14,
+    marginBottom: 16,
     opacity: 0.8,
   },
   statsPreview: {
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 25,
+    padding: 12,
+    marginBottom: 16,
   },
   statsTitle: {
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 6,
+    fontSize: 13,
   },
   statsRow: {
-    gap: 10,
+    gap: 8,
   },
   actions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 16,
+  },
+  button: {
+    width: '48%',
+    backgroundColor: '#4A90E2',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  buttonIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
   },
   tips: {
     backgroundColor: 'rgba(76, 175, 80, 0.1)',
     borderRadius: 8,
-    padding: 15,
+    padding: 12,
   },
   tipTitle: {
     fontWeight: '600',
-    marginBottom: 8,
-    fontSize: 16,
+    marginBottom: 6,
+    fontSize: 14,
   },
   tip: {
-    marginLeft: 10,
-    marginBottom: 4,
-    fontSize: 14,
+    marginLeft: 8,
+    marginBottom: 3,
+    fontSize: 13,
   },
 });

@@ -1,5 +1,5 @@
 // components/StatBar.tsx
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -22,7 +22,7 @@ export default function StatBar({
         <View style={styles.container}>
             <View style={styles.labelRow}>
                 <ThemedText style={styles.label}>{label}</ThemedText>
-                <ThemedText style={styles.value}>{value}/{maxValue}</ThemedText>
+                <ThemedText style={styles.value}>{Math.round(value)}</ThemedText>
             </View>
             <ThemedView style={styles.barBackground}>
                 <View
@@ -41,29 +41,30 @@ export default function StatBar({
 
 const styles = StyleSheet.create({
     container: {
-        marginVertical: 8,
+        marginVertical: 2,
     },
     labelRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 4,
+        marginBottom: 1,
+        alignItems: 'center',
     },
     label: {
         fontSize: 14,
         fontWeight: '500',
     },
     value: {
-        fontSize: 14,
+        fontSize: 10,
         opacity: 0.7,
     },
     barBackground: {
-        height: 8,
+        height: 5,
         backgroundColor: 'rgba(0,0,0,0.1)',
-        borderRadius: 4,
+        borderRadius: 2.5,
         overflow: 'hidden',
     },
     barFill: {
         height: '100%',
-        borderRadius: 4,
+        borderRadius: 2.5,
     },
 });

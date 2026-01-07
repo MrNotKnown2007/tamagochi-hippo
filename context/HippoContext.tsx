@@ -6,7 +6,7 @@ const HippoContext = createContext<HippoContextType | undefined>(undefined);
 
 const initialStats: HippoStats = {
     health: 100,
-    hunger: 50,
+    satiety: 50,
     happiness: 70,
     cleanliness: 60,
     energy: 80,
@@ -55,7 +55,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
 
             const updatedStats = {
                 health: Math.max(0, Math.min(100, newStats.health ?? prev.stats.health)),
-                hunger: Math.max(0, Math.min(100, newStats.hunger ?? prev.stats.hunger)),
+                satiety: Math.max(0, Math.min(100, newStats.satiety ?? prev.stats.satiety)),
                 happiness: Math.max(0, Math.min(100, newStats.happiness ?? prev.stats.happiness)),
                 cleanliness: Math.max(0, Math.min(100, newStats.cleanliness ?? prev.stats.cleanliness)),
                 energy: Math.max(0, Math.min(100, newStats.energy ?? prev.stats.energy)),
@@ -64,7 +64,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const updatedHippo = {
                 ...prev,
                 stats: updatedStats,
-                lastFed: newStats.hunger !== undefined ? new Date() : prev.lastFed,
+                lastFed: newStats.satiety !== undefined ? new Date() : prev.lastFed,
                 lastCleaned: newStats.cleanliness !== undefined ? new Date() : prev.lastCleaned,
                 lastPlayed: newStats.happiness !== undefined ? new Date() : prev.lastPlayed,
             };
@@ -81,11 +81,11 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     // Функции действий
     const feed = useCallback(() => {
         updateStats({
-            hunger: Math.max(0, (hippo?.stats.hunger || 0) - 30),
+            satiety: Math.min(100, (hippo?.stats.satiety || 0) + 30),
             happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
             energy: Math.min(100, (hippo?.stats.energy || 0) + 5),
         });
-    }, [hippo?.stats.hunger, hippo?.stats.happiness, hippo?.stats.energy, updateStats]);
+    }, [hippo?.stats.satiety, hippo?.stats.happiness, hippo?.stats.energy, updateStats]);
 
     const clean = useCallback(() => {
         updateStats({
@@ -98,9 +98,9 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         updateStats({
             happiness: Math.min(100, (hippo?.stats.happiness || 0) + 20),
             energy: Math.max(0, (hippo?.stats.energy || 0) - 25),
-            hunger: Math.min(100, (hippo?.stats.hunger || 0) + 10),
+            satiety: Math.max(0, (hippo?.stats.satiety || 0) - 10),
         });
-    }, [hippo?.stats.happiness, hippo?.stats.energy, hippo?.stats.hunger, updateStats]);
+    }, [hippo?.stats.happiness, hippo?.stats.energy, hippo?.stats.satiety, updateStats]);
 
     const sleep = useCallback(() => {
         updateStats({
@@ -117,7 +117,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
 
                 const updatedStats = {
                     health: Math.max(0, prev.stats.health - 0.1),
-                    hunger: Math.min(100, prev.stats.hunger + 0.2),
+                    satiety: Math.max(0, prev.stats.satiety - 0.2),
                     happiness: Math.max(0, prev.stats.happiness - 0.1),
                     cleanliness: Math.max(0, prev.stats.cleanliness - 0.15),
                     energy: Math.min(100, prev.stats.energy + 0.1),

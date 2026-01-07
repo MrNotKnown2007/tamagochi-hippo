@@ -1,24 +1,28 @@
-// app/(tabs)/index.tsx - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ ДУБЛИРУЮЩИХСЯ ТАБОВ
+// app/(tabs)/index.tsx
 import HippoView from '@/components/HippoView';
-import StatBar from '@/components/StatBar';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useHippo } from '@/context/HippoContext';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Image, // <-- ДОБАВИТЬ ИМПОРТ
+  ImageBackground,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
+
+const backgroundImage = require('@/screens/Main/real_fon.png');
+const feedButtonImg = require('@/assets/images/eat_button.png');
+const bathButtonImg = require('@/assets/images/bath_button.png');
+const playButtonImg = require('@/assets/images/talk_button.png');
+const sleepButtonImg = require('@/assets/images/sleep_button.png');
+const waterButtonImg = require('@/assets/images/water_button.png');
 
 export default function HomeScreen() {
   const { hippo } = useHippo();
+  const [hippoName, setHippoName] = useState('Бегемотик');
 
-  // Состояние для принудительного обновления
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Временное состояние для имени
-  const [hippoName, setHippoName] = useState('Hippo');
-
-  // Загружаем имя при монтировании и при изменении hippo
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedName = localStorage.getItem('hippoName');
@@ -30,37 +34,23 @@ export default function HomeScreen() {
 
   const getHippoMood = useCallback(() => {
     if (!hippo) return 'happy';
-    const { happiness, hunger, energy, cleanliness } = hippo.stats;
-
-    if (hunger > 70) return 'hungry';
+    const { happiness, satiety, energy, cleanliness } = hippo.stats;
+    if (satiety < 30) return 'hungry';
     if (energy < 20) return 'sleepy';
     if (cleanliness < 30) return 'dirty';
     if (happiness < 40) return 'sad';
     return 'happy';
   }, [hippo]);
 
-  const formatAge = useCallback((days: number) => {
-    if (days < 7) return `${days} day${days !== 1 ? 's' : ''}`;
-    const weeks = Math.floor(days / 7);
-    return `${weeks} week${weeks !== 1 ? 's' : ''}`;
-  }, []);
-
-  // Простые функции навигации
   const navigateTo = useCallback((path: string) => {
     if (typeof window !== 'undefined') {
       window.location.href = path;
     }
   }, []);
 
-  // Функция для обновления страницы
-  const refreshPage = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
-  }, []);
-
-  // Функция для сброса гиппопотама
   const handleResetHippo = useCallback(() => {
     if (typeof window !== 'undefined') {
-      if (confirm('Are you sure you want to reset your hippo? This will delete all progress.')) {
+      if (confirm('Вы уверены? Это удалит всё')) {
         localStorage.removeItem('hippoName');
         localStorage.removeItem('hippoStats');
         localStorage.removeItem('hasCreatedHippo');
@@ -70,278 +60,233 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ThemedView style={styles.container}>
-      {/* Скрытый элемент для отслеживания обновлений */}
-      <View style={{ display: 'none' }}>{refreshKey}</View>
+    <View style={styles.mainContainer}>
+      <View style={styles.sidebarLeft} />
 
-      {/* Header с кнопкой обновления */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <ThemedText type="title">{hippoName}</ThemedText>
-          <ThemedText style={styles.age}>
-            Age: {hippo ? formatAge(hippo.age) : '1 day'}
-          </ThemedText>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity onPress={refreshPage} style={styles.refreshButton}>
-            <IconSymbol name="arrow.clockwise" size={20} color="#4A90E2" />
-            <ThemedText style={styles.refreshText}>Refresh</ThemedText>
-          </TouchableOpacity>
-          <Link href="/modal">
-            <ThemedText type="link">Settings</ThemedText>
-          </Link>
-        </View>
+      <View style={styles.centerContainer}>
+        <ImageBackground source={backgroundImage} style={styles.background}>
+          <View style={styles.contentWrapper}>
+            <View style={styles.header}>
+              <ThemedText style={styles.title}>{hippoName}</ThemedText>
+            </View>
+
+            <View style={styles.hippoContainer}>
+              <HippoView mood={getHippoMood()} size="medium" />
+            </View>
+
+            <View style={styles.actionButtonsContainer}>
+              <View style={styles.buttonWithStats}>
+                <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.satiety || 0) * 0.6) }]}>
+                  <View style={[styles.statBar, { backgroundColor: '#FF9800' }]} />
+                </View>
+                <TouchableOpacity style={styles.circleButton} onPress={() => navigateTo('/(tabs)/care')}>
+                  <Image source={feedButtonImg} style={styles.buttonImage} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.buttonWithStats}>
+                <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.cleanliness || 0) * 0.6) }]}>
+                  <View style={[styles.statBar, { backgroundColor: '#2196F3' }]} />
+                </View>
+                <TouchableOpacity style={styles.circleButton} onPress={() => navigateTo('/(tabs)/care')}>
+                  <Image source={bathButtonImg} style={styles.buttonImage} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.buttonWithStats}>
+                <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.happiness || 0) * 0.6) }]}>
+                  <View style={[styles.statBar, { backgroundColor: '#E91E63' }]} />
+                </View>
+                <TouchableOpacity style={styles.circleButton} onPress={() => navigateTo('/(tabs)/care')}>
+                  <Image source={playButtonImg} style={styles.buttonImage} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.buttonWithStats}>
+                <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.energy || 0) * 0.6) }]}>
+                  <View style={[styles.statBar, { backgroundColor: '#9C27B0' }]} />
+                </View>
+                <TouchableOpacity style={styles.circleButton} onPress={() => navigateTo('/(tabs)/care')}>
+                  <Image source={sleepButtonImg} style={styles.buttonImage} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.buttonWithStats}>
+                <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.health || 0) * 0.6) }]}>
+                  <View style={[styles.statBar, { backgroundColor: '#4CAF50' }]} />
+                </View>
+                <TouchableOpacity style={styles.circleButton} onPress={() => navigateTo('/(tabs)/care')}>
+                  <Image source={waterButtonImg} style={styles.buttonImage} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ImageBackground>
       </View>
 
-      {/* Hippo Display */}
-      <HippoView mood={getHippoMood()} size="medium" />
+      <View style={styles.sidebarRight}>
+        <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/care')}>
+          <ThemedText style={styles.sideButtonEmoji}>🏥</ThemedText>
+          <ThemedText style={styles.sideButtonText}>Уход</ThemedText>
+        </TouchableOpacity>
 
-      {/* Stats */}
-      <ThemedView style={styles.statsContainer}>
-        <ThemedText type="subtitle" style={styles.statsTitle}>
-          Stats
-        </ThemedText>
+        <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/shop')}>
+          <ThemedText style={styles.sideButtonEmoji}>🛍️</ThemedText>
+          <ThemedText style={styles.sideButtonText}>Магазин</ThemedText>
+        </TouchableOpacity>
 
-        {hippo ? (
-          <>
-            <StatBar
-              label="Health"
-              value={Math.round(hippo.stats.health)}
-              color="#4CAF50"
-              key={`health-${hippo.stats.health}-${refreshKey}`}
-            />
-            <StatBar
-              label="Hunger"
-              value={Math.round(hippo.stats.hunger)}
-              color="#FF9800"
-              key={`hunger-${hippo.stats.hunger}-${refreshKey}`}
-            />
-            <StatBar
-              label="Happiness"
-              value={Math.round(hippo.stats.happiness)}
-              color="#E91E63"
-              key={`happiness-${hippo.stats.happiness}-${refreshKey}`}
-            />
-            <StatBar
-              label="Cleanliness"
-              value={Math.round(hippo.stats.cleanliness)}
-              color="#2196F3"
-              key={`cleanliness-${hippo.stats.cleanliness}-${refreshKey}`}
-            />
-            <StatBar
-              label="Energy"
-              value={Math.round(hippo.stats.energy)}
-              color="#9C27B0"
-              key={`energy-${hippo.stats.energy}-${refreshKey}`}
-            />
-          </>
-        ) : (
-          <ThemedText style={styles.noStats}>
-            No hippo stats available. Create a hippo first!
-          </ThemedText>
-        )}
-      </ThemedView>
+        <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/stats')}>
+          <ThemedText style={styles.sideButtonEmoji}>📊</ThemedText>
+          <ThemedText style={styles.sideButtonText}>Статистика</ThemedText>
+        </TouchableOpacity>
 
-      {/* Quick Actions - ТОЛЬКО ЭТИ 3 КНОПКИ */}
-      <View style={styles.quickActions}>
-        <ThemedText type="subtitle" style={styles.actionsTitle}>
-          Navigation
-        </ThemedText>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigateTo('/(tabs)/care')}
-          >
-            <IconSymbol name="heart.fill" size={28} color="#fff" />
-            <ThemedText style={styles.actionText}>Care</ThemedText>
-            <ThemedText style={styles.actionSubtext}>Feed, Clean, Play</ThemedText>
+        <View style={styles.sideButtonDivider} />
+
+        <Link href="/onboarding" asChild>
+          <TouchableOpacity style={styles.sideButton}>
+            <ThemedText style={styles.sideButtonText}>Имя</ThemedText>
           </TouchableOpacity>
+        </Link>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.shopButton]}
-            onPress={() => navigateTo('/(tabs)/shop')}
-          >
-            <IconSymbol name="cart.fill" size={28} color="#fff" />
-            <ThemedText style={styles.actionText}>Shop</ThemedText>
-            <ThemedText style={styles.actionSubtext}>Buy items</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.statsButton]}
-            onPress={() => navigateTo('/(tabs)/stats')}
-          >
-            <IconSymbol name="chart.bar.fill" size={28} color="#fff" />
-            <ThemedText style={styles.actionText}>Stats</ThemedText>
-            <ThemedText style={styles.actionSubtext}>Progress</ThemedText>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.sideButton} onPress={handleResetHippo}>
+          <ThemedText style={[styles.sideButtonText, styles.resetText]}>Сброс</ThemedText>
+        </TouchableOpacity>
       </View>
-
-      {/* Tips */}
-      <View style={styles.tips}>
-        <ThemedText style={styles.tipTitle}>💡 Tips:</ThemedText>
-        <ThemedText style={styles.tip}>
-          • Go to <ThemedText style={styles.bold}>Care</ThemedText> to feed, clean, play with, and put your hippo to sleep
-        </ThemedText>
-        <ThemedText style={styles.tip}>
-          • Keep all stats above 30% for a happy hippo
-        </ThemedText>
-        <ThemedText style={styles.tip}>
-          • Low energy? Try the <ThemedText style={styles.bold}>Sleep</ThemedText> action in Care
-        </ThemedText>
-      </View>
-
-      {/* Links */}
-      <View style={styles.links}>
-        <View style={styles.linkGroup}>
-          <Link href="/onboarding">
-            <ThemedText type="link">Edit Name</ThemedText>
-          </Link>
-          <TouchableOpacity onPress={handleResetHippo}>
-            <ThemedText type="link" style={styles.resetLink}>Reset Hippo</ThemedText>
-          </TouchableOpacity>
-        </View>
-        <ThemedText style={styles.version}>Hippo Tamagotchi v1.0</ThemedText>
-      </View>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  // ===== ОСНОВНОЙ КОНТЕЙНЕР =====
+  mainContainer: {
     flex: 1,
-    padding: 20,
+    flexDirection: 'row',
+    backgroundColor: '#1a1a1a',
   },
+  
+  // ===== БОКОВЫЕ ПАНЕЛИ =====
+  sidebarLeft: {
+    width: '15%',
+    backgroundColor: '#1a1a1a',
+  },
+  
+  // ===== ЦЕНТРАЛЬНАЯ ОБЛАСТЬ С ФОНОМ =====
+  centerContainer: {
+    width: '70%',
+  },
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
+  contentWrapper: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+  },
+  
+  // ===== ЗАГОЛОВОК БЕЗ ЛОГОТИПА =====
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    marginBottom: 8,
   },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    borderRadius: 6,
-  },
-  refreshText: {
-    fontSize: 12,
-    color: '#4A90E2',
-    fontWeight: '500',
-  },
-  age: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginTop: 4,
-  },
-  statsContainer: {
-    marginTop: 30,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 12,
-    padding: 20,
-  },
-  statsTitle: {
-    marginBottom: 15,
-  },
-  noStats: {
-    textAlign: 'center',
-    padding: 20,
-    opacity: 0.7,
-  },
-  quickActions: {
-    marginTop: 30,
-    marginBottom: 30,
-  },
-  actionsTitle: {
-    marginBottom: 15,
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1a1a1a',
     textAlign: 'center',
   },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  actionButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    padding: 20,
+  
+  // ===== КОНТЕЙНЕР С БЕГЕМОТИКОМ =====
+  hippoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    minHeight: 100,
   },
-  shopButton: {
-    backgroundColor: '#FF9800',
+  
+  // ===== КНОПКИ ДЕЙСТВИЙ =====
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    paddingBottom: 8,
+    gap: 8,
+    paddingHorizontal: 8,
   },
-  statsButton: {
-    backgroundColor: '#9C27B0',
+  buttonWithStats: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: 120,
   },
-  actionText: {
+  statBarContainer: {
+    width: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    borderRadius: 6,
+    marginBottom: 4,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  statBar: {
+    width: '100%',
+    height: '100%',
+  },
+  circleButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  buttonImage: {
+    width: 70,
+    height: 70,
+    resizeMode: 'contain',
+  },
+  
+  // ===== ПРАВАЯ БОКОВАЯ ПАНЕЛЬ =====
+  sidebarRight: {
+    width: '15%',
+    backgroundColor: '#1a1a1a',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 12,
+  },
+  sideButton: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  sideButtonEmoji: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  sideButtonText: {
     color: '#fff',
+    fontSize: 11,
     fontWeight: '600',
-    marginTop: 8,
-    fontSize: 16,
-  },
-  actionSubtext: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
-    marginTop: 2,
     textAlign: 'center',
   },
-  // УБРАН блок tabsContainer - больше нет дублирующихся табов!
-
-  // Остальные стили
-  tips: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: 'rgba(255, 235, 59, 0.2)',
-    borderRadius: 8,
-    marginBottom: 30,
+  sideButtonDivider: {
+    width: '80%',
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginVertical: 8,
   },
-  tipTitle: {
-    fontWeight: '600',
-    marginBottom: 8,
-    fontSize: 16,
-  },
-  tip: {
-    marginLeft: 10,
-    marginBottom: 6,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  bold: {
-    fontWeight: '600',
-  },
-  links: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 15,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
-  },
-  linkGroup: {
-    flexDirection: 'row',
-    gap: 15,
-    alignItems: 'center',
-  },
-  resetLink: {
+  resetText: {
     color: '#FF5252',
-  },
-  version: {
-    fontSize: 12,
-    opacity: 0.5,
   },
 });

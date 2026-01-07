@@ -11,7 +11,7 @@ export type RootStackParamList = {
 
 export type HippoStats = {
     health: number;
-    hunger: number;
+    satiety: number;
     happiness: number;
     cleanliness: number;
     energy: number;

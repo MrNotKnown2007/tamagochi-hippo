@@ -1,7 +1,7 @@
 // app/onboarding/name.tsx
-import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, Alert } from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function NameHippoScreen() {
   const [name, setName] = useState('');
@@ -9,12 +9,12 @@ export default function NameHippoScreen() {
 
   const handleContinue = () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please give your hippo a name!');
+      Alert.alert('Ошибка', 'Дайте имя вашему бегемотику!');
       return;
     }
 
     if (name.length > 20) {
-      Alert.alert('Error', 'Name is too long! Max 20 characters.');
+      Alert.alert('Ошибка', 'Имя слишком длинное! Максимум 20 символов.');
       return;
     }
 
@@ -34,14 +34,14 @@ export default function NameHippoScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Name Your Hippo 🦛</Text>
+      <Text style={styles.title}>Назовите бегемотика 🦛</Text>
       <Text style={styles.subtitle}>
-        Give your hippo a special name
+        Дайте вашему бегемотику особенное имя
       </Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Enter hippo name"
+        placeholder="Введите имя"
         value={name}
         onChangeText={setName}
         maxLength={20}
@@ -49,13 +49,13 @@ export default function NameHippoScreen() {
       />
 
       <Text style={styles.hint}>
-        Example: Bubbles, Moto, River, Happy
+        Примеры: Пузик, Мото, Река, Счастливчик
       </Text>
 
       <View style={styles.buttonRow}>
         <View style={styles.buttonContainer}>
           <Button
-            title="Back"
+            title="Назад"
             onPress={handleBack}
             color="#666"
           />
@@ -63,7 +63,7 @@ export default function NameHippoScreen() {
 
         <View style={styles.buttonContainer}>
           <Button
-            title="Continue"
+            title="Продолжить"
             onPress={handleContinue}
             disabled={!name.trim()}
             color="#4A90E2"
@@ -72,7 +72,7 @@ export default function NameHippoScreen() {
       </View>
 
       <Link href="/(tabs)" style={styles.skipLink}>
-        <Text style={styles.skipText}>Skip for now →</Text>
+        <Text style={styles.skipText}>Пропустить →</Text>
       </Link>
     </View>
   );

@@ -1,6 +1,6 @@
 // app/onboarding/index.tsx
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function OnboardingScreen() {
   const handleSkip = () => {
     // Если пропускаем, все равно создаем гиппопотама с именем по умолчанию
     if (typeof window !== 'undefined') {
-      localStorage.setItem('hippoName', 'Hippo');
+      localStorage.setItem('hippoName', 'Бегемотик');
       localStorage.setItem('hasCreatedHippo', 'true');
     }
     router.push('/(tabs)');
@@ -20,24 +20,24 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Hippo Tamagotchi! 🦛</Text>
+      <Text style={styles.title}>Добро пожаловать! 🦛</Text>
       <Text style={styles.subtitle}>
-        Your journey with a virtual hippo begins here!
+        Ваше путешествие с виртуальным бегемотиком начинается!
       </Text>
       <Text style={styles.description}>
-        Feed, clean, play with, and care for your hippo to keep it happy and healthy.
+        Кормите, мойте, играйте и ухаживайте за своим бегемотиком, чтобы он был счастлив и здоров.
       </Text>
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Get Started →"
+          title="Начать →"
           onPress={handleGetStarted}
           color="#4A90E2"
         />
       </View>
 
       <Button
-        title="Skip for now"
+        title="Пропустить"
         onPress={handleSkip}
         color="#666"
       />

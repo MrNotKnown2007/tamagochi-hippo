@@ -1,10 +1,8 @@
 // components/HippoView.tsx
-import { View, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
-import { ThemedText } from './themed-text';
+import { StyleSheet, View } from 'react-native';
 
 interface HippoViewProps {
-    mood?: 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty'; // ДОБАВЬТЕ 'dirty'
+    mood?: 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty';
     size?: 'small' | 'medium' | 'large';
 }
 
@@ -12,54 +10,16 @@ export default function HippoView({
     mood = 'happy',
     size = 'medium'
 }: HippoViewProps) {
-    const sizeMap = {
-        small: 100,
-        medium: 200,
-        large: 300,
-    };
-
-    // Временная заглушка - используем существующую картинку из проекта
-    const imageSource = require('@/assets/images/react-logo.png');
-
-    const getMoodText = () => {
-        switch (mood) {
-            case 'happy': return '😊 Happy Hippo';
-            case 'sad': return '😢 Sad Hippo';
-            case 'hungry': return '🍖 Hungry Hippo';
-            case 'sleepy': return '😴 Sleepy Hippo';
-            case 'dirty': return '🛁 Dirty Hippo';
-            default: return '😊 Happy Hippo';
-        }
-    };
-
+    // Пустой компонент - ничего не рендерит
     return (
-        <View style={styles.container}>
-            <Image
-                source={imageSource}
-                style={[
-                    styles.image,
-                    { width: sizeMap[size], height: sizeMap[size] }
-                ]}
-                contentFit="contain"
-            />
-            <ThemedText style={styles.moodText}>
-                {getMoodText()}
-            </ThemedText>
-        </View>
+        <View style={styles.emptyContainer} />
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 20,
-    },
-    image: {
-        marginBottom: 10,
-    },
-    moodText: {
-        fontSize: 18,
-        fontWeight: '600',
+    emptyContainer: {
+        // Можно задать размеры для сохранения места в лейауте
+        width: 200, // или другой размер по умолчанию
+        height: 200,
     },
 });
