@@ -1,4 +1,4 @@
-// app/(tabs)/care.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
+// app/(tabs)/care.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useHippo } from '@/context/HippoContext';
@@ -38,7 +38,9 @@ export default function CareScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>Уход за бегемотиком</ThemedText>
+      <ThemedText type="title" style={styles.title}>
+        Уход за {hippo?.gender === 'male' ? 'бегемотиком' : 'бегемотичкой'}
+      </ThemedText>
       <ThemedText style={styles.subtitle}>
         Помогите {hippo?.name || 'бегемотику'} быть счастливым и здоровым
       </ThemedText>

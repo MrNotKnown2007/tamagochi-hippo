@@ -1,4 +1,4 @@
-// app/index.tsx
+// app/index.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
 import { Redirect } from 'expo-router';
 
 export default function Index() {
@@ -8,7 +8,7 @@ export default function Index() {
     const hasCreatedHippo = localStorage.getItem('hasCreatedHippo');
 
     // Если гиппопотам уже создан (есть имя или флаг) - идем на главную
-    if (hippoName || hasCreatedHippo === 'true') {
+    if (hippoName && hasCreatedHippo === 'true') {
       return <Redirect href="/(tabs)" />;
     }
   }

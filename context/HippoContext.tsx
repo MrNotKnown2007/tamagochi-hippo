@@ -16,7 +16,7 @@ const initialStats: HippoStats = {
 const initialHippo: Hippo = {
     id: '1',
     name: 'Бегемотик',
-    gender: 'male', // ДОБАВЛЯЕМ ПОЛЕ ПОЛА
+    gender: 'male',
     age: 1,
     stats: initialStats,
     createdAt: new Date(),
@@ -38,7 +38,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 const baseHippo = {
                     ...initialHippo,
                     name: savedName,
-                    gender: savedGender || 'male', // используем сохраненный пол или по умолчанию
+                    gender: savedGender || 'male',
                     lastWatered: new Date()
                 };
                 if (savedStats) {
@@ -57,6 +57,46 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         }
         return initialHippo;
     });
+
+    // Синхронизация с localStorage при изменениях
+    useEffect(() => {
+        const handleStorageChange = () => {
+            if (typeof window !== 'undefined') {
+                const savedName = localStorage.getItem('hippoName');
+                const savedGender = localStorage.getItem('hippoGender') as HippoGender | null;
+
+                setHippo(prev => {
+                    if (!prev) return prev;
+
+                    let updated = false;
+                    const updates: Partial<Hippo> = {};
+
+                    if (savedName && prev.name !== savedName) {
+                        updates.name = savedName;
+                        updated = true;
+                    }
+
+                    if (savedGender && prev.gender !== savedGender) {
+                        updates.gender = savedGender;
+                        updated = true;
+                    }
+
+                    return updated ? { ...prev, ...updates } : prev;
+                });
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('storage', handleStorageChange);
+
+            const interval = setInterval(handleStorageChange, 1000);
+
+            return () => {
+                window.removeEventListener('storage', handleStorageChange);
+                clearInterval(interval);
+            };
+        }
+    }, []);
 
     // Функция обновления статистики
     const updateStats = useCallback((newStats: Partial<HippoStats>) => {
@@ -78,7 +118,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 lastPlayed: newStats.happiness !== undefined ? new Date() : prev.lastPlayed,
                 lastWatered: newStats.thirst !== undefined ? new Date() : prev.lastWatered,
             };
-            // Сохраняем в localStorage
             if (typeof window !== 'undefined') {
                 localStorage.setItem('hippoStats', JSON.stringify(updatedStats));
             }
@@ -171,13 +210,37 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 name,
                 gender
             };
+
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('hippoName', name);
+                localStorage.setItem('hippoGender', gender);
+                localStorage.setItem('hasCreatedHippo', 'true');
+            }
+
             return updatedHippo;
         });
     }, []);
 
+    // Вычисляем hasCompletedOnboarding как boolean значение
+    const hasCompletedOnboarding = (() => {
+        if (typeof window !== 'undefined') {
+            const hasCreated = localStorage.getItem('hasCreatedHippo') === 'true';
+            const hasName = !!localStorage.getItem('hippoName');
+            return hasCreated && hasName;
+        }
+        return false;
+    })();
+
     const value: HippoContextType = {
         hippo,
-        setHippo,
+        setHippo: (newHippo: Hippo) => {
+            setHippo(newHippo);
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('hippoName', newHippo.name);
+                localStorage.setItem('hippoGender', newHippo.gender);
+                localStorage.setItem('hippoStats', JSON.stringify(newHippo.stats));
+            }
+        },
         updateStats,
         feed,
         clean,
@@ -193,7 +256,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 localStorage.removeItem('hasCreatedHippo');
             }
         },
-        hasCompletedOnboarding: !!hippo?.name && hippo.name !== 'Бегемотик',
+        hasCompletedOnboarding, // теперь это boolean, а не функция
         completeOnboarding,
     };
 
