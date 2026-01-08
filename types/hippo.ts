@@ -7,7 +7,7 @@ export type RootStackParamList = {
     feeding: undefined;
     cleaning: undefined;
     playing: undefined;
-    watering: undefined; // НОВЫЙ ЭКРАН
+    watering: undefined;
 };
 
 export type HippoStats = {
@@ -16,19 +16,52 @@ export type HippoStats = {
     happiness: number;
     cleanliness: number;
     energy: number;
-    thirst: number; // НОВЫЙ ПАРАМЕТР
+    thirst: number;
+};
+
+export type HippoGender = 'male' | 'female';
+
+// НОВЫЕ ТИПЫ ДЛЯ ОДЕЖДЫ И МАГАЗИНА
+export type ClothingCategory = 'head' | 'upper' | 'lower' | 'feet';
+
+// В types/hippo.ts в типе ClothingItem добавьте:
+export type ClothingItem = {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    category: ClothingCategory;
+    icon: string;
+    rarity: 'common' | 'rare' | 'epic';
+    unlocked: boolean; // Это поле должно быть
+};
+
+export type HippoOutfit = {
+    head?: string; // id предмета
+    upper?: string;
+    lower?: string;
+    feet?: string;
 };
 
 export interface Hippo {
     id: string;
     name: string;
-    age: number; // в днях
+    gender: HippoGender;
+    age: number;
     stats: HippoStats;
+    outfit: HippoOutfit;
+    coins: number;
     createdAt: Date;
     lastFed?: Date;
     lastCleaned?: Date;
     lastPlayed?: Date;
-    lastWatered?: Date; // НОВОЕ ПОЛЕ
+    lastWatered?: Date;
+    // СЧЕТЧИКИ ДЕЙСТВИЙ
+    feedCount: number;
+    cleanCount: number;
+    playCount: number;
+    sleepCount: number;
+    waterCount: number;
 }
 
 export type HippoMood = 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty' | 'thirsty';
@@ -42,8 +75,14 @@ export interface HippoContextType {
     clean: () => void;
     play: () => void;
     sleep: () => void;
-    giveWater: () => void; // НОВАЯ ФУНКЦИЯ
+    giveWater: () => void;
     resetHippo: () => void;
     hasCompletedOnboarding: boolean;
-    completeOnboarding: (name: string) => void;
+    completeOnboarding: (name: string, gender: HippoGender) => void;
+    // НОВЫЕ ФУНКЦИИ ДЛЯ МАГАЗИНА
+    buyItem: (itemId: string) => boolean;
+    equipItem: (itemId: string) => void;
+    unequipItem: (category: ClothingCategory) => void;
+    addCoins: (amount: number) => void;
+    getAvailableItems: () => ClothingItem[];
 }

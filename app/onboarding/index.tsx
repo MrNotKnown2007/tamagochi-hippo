@@ -1,4 +1,4 @@
-// app/onboarding/index.tsx
+// app/onboarding/index.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
 import { useRouter } from 'expo-router';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
@@ -10,9 +10,10 @@ export default function OnboardingScreen() {
   };
 
   const handleSkip = () => {
-    // Если пропускаем, все равно создаем гиппопотама с именем по умолчанию
+    // Если пропускаем, создаем гиппопотама с именем и полом по умолчанию
     if (typeof window !== 'undefined') {
       localStorage.setItem('hippoName', 'Бегемотик');
+      localStorage.setItem('hippoGender', 'male'); // ДОБАВЛЯЕМ пол по умолчанию
       localStorage.setItem('hasCreatedHippo', 'true');
     }
     router.push('/(tabs)');
@@ -25,9 +26,9 @@ export default function OnboardingScreen() {
         Ваше путешествие с виртуальным бегемотиком начинается!
       </Text>
       <Text style={styles.description}>
-        Кормите, мойте, играйте и ухаживайте за своим бегемотиком, чтобы он был счастлив и здоров.
+        Создайте своего уникального бегемотика, выберите имя и пол.
+        Кормите, мойте, играйте и ухаживайте за ним, чтобы он был счастлив и здоров.
       </Text>
-
       <View style={styles.buttonContainer}>
         <Button
           title="Начать →"
@@ -35,7 +36,6 @@ export default function OnboardingScreen() {
           color="#4A90E2"
         />
       </View>
-
       <Button
         title="Пропустить"
         onPress={handleSkip}
