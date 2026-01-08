@@ -1,8 +1,8 @@
-// components/HippoView.tsx
+// components/HippoView.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ (оставляем пустым)
 import { StyleSheet, View } from 'react-native';
 
 interface HippoViewProps {
-    mood?: 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty';
+    mood?: 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty' | 'thirsty'; // ДОБАВЛЯЕМ 'thirsty'
     size?: 'small' | 'medium' | 'large';
 }
 
@@ -10,7 +10,7 @@ export default function HippoView({
     mood = 'happy',
     size = 'medium'
 }: HippoViewProps) {
-    // Пустой компонент - ничего не рендерит
+    // Пустой компонент - ничего не рендерит (пока нет изображений)
     return (
         <View style={styles.emptyContainer} />
     );

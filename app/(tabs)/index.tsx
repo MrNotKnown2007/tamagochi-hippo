@@ -34,11 +34,16 @@ export default function HomeScreen() {
 
   const getHippoMood = useCallback(() => {
     if (!hippo) return 'happy';
-    const { happiness, satiety, energy, cleanliness } = hippo.stats;
-    if (satiety < 30) return 'hungry';
-    if (energy < 20) return 'sleepy';
-    if (cleanliness < 30) return 'dirty';
-    if (happiness < 40) return 'sad';
+    const { happiness, satiety, energy, cleanliness, thirst } = hippo.stats;
+
+    // Проверяем самые критические состояния
+    if (thirst > 80) return 'thirsty';
+    if (satiety < 20) return 'hungry';
+    if (energy < 15) return 'sleepy';
+    if (cleanliness < 25) return 'dirty';
+    if (happiness < 30) return 'sad';
+
+    // Все показатели в норме
     return 'happy';
   }, [hippo]);
 
@@ -163,13 +168,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#1a1a1a',
   },
-  
+
   // ===== БОКОВЫЕ ПАНЕЛИ =====
   sidebarLeft: {
     width: '15%',
     backgroundColor: '#1a1a1a',
   },
-  
+
   // ===== ЦЕНТРАЛЬНАЯ ОБЛАСТЬ С ФОНОМ =====
   centerContainer: {
     width: '70%',
@@ -185,7 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
   },
-  
+
   // ===== ЗАГОЛОВОК БЕЗ ЛОГОТИПА =====
   header: {
     alignItems: 'center',
@@ -197,14 +202,14 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     textAlign: 'center',
   },
-  
+
   // ===== КОНТЕЙНЕР С БЕГЕМОТИКОМ =====
   hippoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
   },
-  
+
   // ===== КНОПКИ ДЕЙСТВИЙ =====
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -248,7 +253,7 @@ const styles = StyleSheet.create({
     height: 70,
     resizeMode: 'contain',
   },
-  
+
   // ===== ПРАВАЯ БОКОВАЯ ПАНЕЛЬ =====
   sidebarRight: {
     width: '15%',

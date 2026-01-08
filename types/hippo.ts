@@ -7,6 +7,7 @@ export type RootStackParamList = {
     feeding: undefined;
     cleaning: undefined;
     playing: undefined;
+    watering: undefined; // НОВЫЙ ЭКРАН
 };
 
 export type HippoStats = {
@@ -15,6 +16,7 @@ export type HippoStats = {
     happiness: number;
     cleanliness: number;
     energy: number;
+    thirst: number; // НОВЫЙ ПАРАМЕТР
 };
 
 export interface Hippo {
@@ -26,9 +28,10 @@ export interface Hippo {
     lastFed?: Date;
     lastCleaned?: Date;
     lastPlayed?: Date;
+    lastWatered?: Date; // НОВОЕ ПОЛЕ
 }
 
-export type HippoMood = 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty';
+export type HippoMood = 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty' | 'thirsty';
 
 // Типы для контекста
 export interface HippoContextType {
@@ -39,6 +42,7 @@ export interface HippoContextType {
     clean: () => void;
     play: () => void;
     sleep: () => void;
+    giveWater: () => void; // НОВАЯ ФУНКЦИЯ
     resetHippo: () => void;
     hasCompletedOnboarding: boolean;
     completeOnboarding: (name: string) => void;
