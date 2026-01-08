@@ -1,10 +1,13 @@
-// app/onboarding/name.tsx
+// app/onboarding/name.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ С ВЫБОРОМ ПОЛА
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+type Gender = 'male' | 'female' | '';
 
 export default function NameHippoScreen() {
   const [name, setName] = useState('');
+  const [gender, setGender] = useState<Gender>('');
   const router = useRouter();
 
   const handleContinue = () => {
@@ -18,9 +21,15 @@ export default function NameHippoScreen() {
       return;
     }
 
-    // Сохраняем имя и флаг создания гиппопотама
+    if (!gender) {
+      Alert.alert('Ошибка', 'Выберите пол вашего бегемотика!');
+      return;
+    }
+
+    // Сохраняем имя, пол и флаг создания гиппопотама
     if (typeof window !== 'undefined') {
       localStorage.setItem('hippoName', name.trim());
+      localStorage.setItem('hippoGender', gender);
       localStorage.setItem('hasCreatedHippo', 'true');
     }
 
@@ -32,25 +41,70 @@ export default function NameHippoScreen() {
     router.back(); // Возврат на предыдущий экран
   };
 
+  const handleGenderSelect = (selectedGender: Gender) => {
+    setGender(selectedGender);
+  };
+
+  const canContinue = name.trim() && gender;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Назовите бегемотика 🦛</Text>
+      <Text style={styles.title}>Создайте своего бегемотика 🦛</Text>
       <Text style={styles.subtitle}>
-        Дайте вашему бегемотику особенное имя
+        Дайте имя и выберите пол вашего питомца
       </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Введите имя"
-        value={name}
-        onChangeText={setName}
-        maxLength={20}
-        autoFocus
-      />
+      <View style={styles.formSection}>
+        <Text style={styles.sectionLabel}>Имя бегемотика:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Введите имя"
+          value={name}
+          onChangeText={setName}
+          maxLength={20}
+          autoFocus
+        />
+        <Text style={styles.hint}>
+          Примеры: Пузик, Мото, Река, Счастливчик
+        </Text>
+      </View>
 
-      <Text style={styles.hint}>
-        Примеры: Пузик, Мото, Река, Счастливчик
-      </Text>
+      <View style={styles.formSection}>
+        <Text style={styles.sectionLabel}>Пол бегемотика:</Text>
+        <View style={styles.genderContainer}>
+          <TouchableOpacity
+            style={[
+              styles.genderButton,
+              gender === 'male' && styles.genderButtonSelected,
+            ]}
+            onPress={() => handleGenderSelect('male')}
+          >
+            <Text style={styles.genderEmoji}>♂️</Text>
+            <Text style={[
+              styles.genderText,
+              gender === 'male' && styles.genderTextSelected
+            ]}>
+              Мальчик
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.genderButton,
+              gender === 'female' && styles.genderButtonSelected,
+            ]}
+            onPress={() => handleGenderSelect('female')}
+          >
+            <Text style={styles.genderEmoji}>♀️</Text>
+            <Text style={[
+              styles.genderText,
+              gender === 'female' && styles.genderTextSelected
+            ]}>
+              Девочка
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <View style={styles.buttonRow}>
         <View style={styles.buttonContainer}>
@@ -60,19 +114,18 @@ export default function NameHippoScreen() {
             color="#666"
           />
         </View>
-
         <View style={styles.buttonContainer}>
           <Button
             title="Продолжить"
             onPress={handleContinue}
-            disabled={!name.trim()}
+            disabled={!canContinue}
             color="#4A90E2"
           />
         </View>
       </View>
 
       <Link href="/(tabs)" style={styles.skipLink}>
-        <Text style={styles.skipText}>Пропустить →</Text>
+        <Text style={styles.skipText}>Пропустить создание →</Text>
       </Link>
     </View>
   );
@@ -99,6 +152,16 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     color: '#4A5568',
   },
+  formSection: {
+    width: '100%',
+    marginBottom: 25,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: '#2D3748',
+  },
   input: {
     width: '100%',
     height: 50,
@@ -107,7 +170,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 18,
-    marginBottom: 10,
     backgroundColor: 'white',
   },
   hint: {
@@ -115,7 +177,39 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontSize: 14,
     color: '#718096',
-    marginBottom: 30,
+    marginTop: 8,
+  },
+  genderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  genderButtonSelected: {
+    borderColor: '#4A90E2',
+    backgroundColor: '#EBF4FF',
+  },
+  genderEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  genderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4A5568',
+  },
+  genderTextSelected: {
+    color: '#4A90E2',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -123,6 +217,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 10,
     marginBottom: 15,
+    marginTop: 10,
   },
   buttonContainer: {
     flex: 1,

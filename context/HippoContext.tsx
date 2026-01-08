@@ -1,5 +1,5 @@
-// context/HippoContext.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
-import { Hippo, HippoContextType, HippoStats } from '@/types/hippo';
+// context/HippoContext.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
+import { Hippo, HippoContextType, HippoGender, HippoStats } from '@/types/hippo';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 const HippoContext = createContext<HippoContextType | undefined>(undefined);
@@ -10,19 +10,20 @@ const initialStats: HippoStats = {
     happiness: 70,
     cleanliness: 60,
     energy: 80,
-    thirst: 30, // НОВЫЙ ПАРАМЕТР - жажда
+    thirst: 30,
 };
 
 const initialHippo: Hippo = {
     id: '1',
-    name: 'Hippo',
+    name: 'Бегемотик',
+    gender: 'male', // ДОБАВЛЯЕМ ПОЛЕ ПОЛА
     age: 1,
     stats: initialStats,
     createdAt: new Date(),
     lastFed: new Date(),
     lastCleaned: new Date(),
     lastPlayed: new Date(),
-    lastWatered: new Date(), // НОВОЕ ПОЛЕ - время последнего питья
+    lastWatered: new Date(),
 };
 
 export function HippoProvider({ children }: { children: React.ReactNode }) {
@@ -30,19 +31,22 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         // Пытаемся загрузить из localStorage при инициализации
         if (typeof window !== 'undefined') {
             const savedName = localStorage.getItem('hippoName');
+            const savedGender = localStorage.getItem('hippoGender') as HippoGender | null;
             const savedStats = localStorage.getItem('hippoStats');
+
             if (savedName) {
                 const baseHippo = {
                     ...initialHippo,
                     name: savedName,
-                    lastWatered: new Date() // Инициализируем для восстановленных данных
+                    gender: savedGender || 'male', // используем сохраненный пол или по умолчанию
+                    lastWatered: new Date()
                 };
                 if (savedStats) {
                     try {
                         const parsedStats = JSON.parse(savedStats);
                         return {
                             ...baseHippo,
-                            stats: { ...initialStats, ...parsedStats } // Сохраняем все параметры
+                            stats: { ...initialStats, ...parsedStats }
                         };
                     } catch (e) {
                         console.error('Failed to parse saved stats:', e);
@@ -88,7 +92,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             satiety: Math.min(100, (hippo?.stats.satiety || 0) + 30),
             happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
             energy: Math.min(100, (hippo?.stats.energy || 0) + 5),
-            thirst: Math.max(0, (hippo?.stats.thirst || 0) + 5), // Еда увеличивает жажду
+            thirst: Math.max(0, (hippo?.stats.thirst || 0) + 5),
         });
     }, [hippo?.stats, updateStats]);
 
@@ -105,7 +109,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             happiness: Math.min(100, (hippo?.stats.happiness || 0) + 20),
             energy: Math.max(0, (hippo?.stats.energy || 0) - 25),
             satiety: Math.max(0, (hippo?.stats.satiety || 0) - 10),
-            thirst: Math.max(0, (hippo?.stats.thirst || 0) + 15), // Игра увеличивает жажду
+            thirst: Math.max(0, (hippo?.stats.thirst || 0) + 15),
         });
     }, [hippo?.stats, updateStats]);
 
@@ -114,11 +118,10 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             energy: Math.min(100, (hippo?.stats.energy || 0) + 50),
             health: Math.min(100, (hippo?.stats.health || 0) + 5),
             satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5),
-            thirst: Math.max(0, (hippo?.stats.thirst || 0) + 10), // Сон увеличивает жажду
+            thirst: Math.max(0, (hippo?.stats.thirst || 0) + 10),
         });
     }, [hippo?.stats, updateStats]);
 
-    // НОВАЯ ФУНКЦИЯ: дать воду
     const giveWater = useCallback(() => {
         updateStats({
             thirst: Math.max(0, (hippo?.stats.thirst || 0) - 40),
@@ -138,14 +141,12 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     happiness: Math.max(0, prev.stats.happiness - 0.1),
                     cleanliness: Math.max(0, prev.stats.cleanliness - 0.15),
                     energy: Math.min(100, prev.stats.energy + 0.1),
-                    thirst: Math.min(100, prev.stats.thirst + 0.25), // Жажда увеличивается со временем
+                    thirst: Math.min(100, prev.stats.thirst + 0.25),
                 };
-                // Если жажда слишком высокая - ухудшается здоровье
                 if (updatedStats.thirst > 80) {
                     updatedStats.health = Math.max(0, updatedStats.health - 0.3);
                     updatedStats.happiness = Math.max(0, updatedStats.happiness - 0.2);
                 }
-                // Сохраняем в localStorage
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('hippoStats', JSON.stringify(updatedStats));
                 }
@@ -154,8 +155,24 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     stats: updatedStats,
                 };
             });
-        }, 30000); // Каждые 30 секунд
+        }, 30000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Функция завершения онбординга
+    const completeOnboarding = useCallback((name: string, gender: HippoGender) => {
+        setHippo(prev => {
+            const updatedHippo = prev ? {
+                ...prev,
+                name,
+                gender
+            } : {
+                ...initialHippo,
+                name,
+                gender
+            };
+            return updatedHippo;
+        });
     }, []);
 
     const value: HippoContextType = {
@@ -166,17 +183,18 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         clean,
         play,
         sleep,
-        giveWater, // ДОБАВЛЯЕМ новую функцию в контекст
+        giveWater,
         resetHippo: () => {
             setHippo(initialHippo);
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('hippoStats');
+                localStorage.removeItem('hippoName');
+                localStorage.removeItem('hippoGender');
+                localStorage.removeItem('hasCreatedHippo');
             }
         },
-        hasCompletedOnboarding: !!hippo?.name && hippo.name !== 'Hippo',
-        completeOnboarding: (name: string) => {
-            setHippo(prev => prev ? { ...prev, name } : prev);
-        },
+        hasCompletedOnboarding: !!hippo?.name && hippo.name !== 'Бегемотик',
+        completeOnboarding,
     };
 
     return (

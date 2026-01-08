@@ -7,7 +7,7 @@ export type RootStackParamList = {
     feeding: undefined;
     cleaning: undefined;
     playing: undefined;
-    watering: undefined; // НОВЫЙ ЭКРАН
+    watering: undefined;
 };
 
 export type HippoStats = {
@@ -16,19 +16,23 @@ export type HippoStats = {
     happiness: number;
     cleanliness: number;
     energy: number;
-    thirst: number; // НОВЫЙ ПАРАМЕТР
+    thirst: number;
 };
+
+// ДОБАВЛЯЕМ ТИП ПОЛА
+export type HippoGender = 'male' | 'female';
 
 export interface Hippo {
     id: string;
     name: string;
+    gender: HippoGender; // НОВОЕ ПОЛЕ
     age: number; // в днях
     stats: HippoStats;
     createdAt: Date;
     lastFed?: Date;
     lastCleaned?: Date;
     lastPlayed?: Date;
-    lastWatered?: Date; // НОВОЕ ПОЛЕ
+    lastWatered?: Date;
 }
 
 export type HippoMood = 'happy' | 'sad' | 'hungry' | 'sleepy' | 'dirty' | 'thirsty';
@@ -42,8 +46,8 @@ export interface HippoContextType {
     clean: () => void;
     play: () => void;
     sleep: () => void;
-    giveWater: () => void; // НОВАЯ ФУНКЦИЯ
+    giveWater: () => void;
     resetHippo: () => void;
     hasCompletedOnboarding: boolean;
-    completeOnboarding: (name: string) => void;
+    completeOnboarding: (name: string, gender: HippoGender) => void; // ОБНОВЛЯЕМ ФУНКЦИЮ
 }
