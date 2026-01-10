@@ -1,7 +1,7 @@
 // context/HippoContext.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
 import { SHOP_ITEMS } from '@/constants/shop-items';
-import { storage } from '@/utils/storage';
 import { Hippo, HippoContextType, HippoGender, HippoOutfit, HippoStats } from '@/types/hippo';
+import { storage } from '@/utils/storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 const HippoContext = createContext<HippoContextType | undefined>(undefined);
@@ -51,10 +51,10 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         try {
             // Используем Promise.all для параллельной загрузки
             const [
-                savedName, 
-                savedGender, 
-                savedStats, 
-                savedOutfit, 
+                savedName,
+                savedGender,
+                savedStats,
+                savedOutfit,
                 savedCoins,
                 feedCount,
                 cleanCount,
@@ -89,7 +89,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     sleepCount: sleepCount ? parseInt(sleepCount) : 0,
                     waterCount: waterCount ? parseInt(waterCount) : 0,
                 };
-                
+
                 if (savedStats) {
                     try {
                         const parsedStats = JSON.parse(savedStats);
@@ -126,7 +126,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     // Сохраняем разблокированные предметы
     useEffect(() => {
         if (isLoading) return;
-        
+
         const saveUnlockedItems = async () => {
             try {
                 await storage.setItem('unlockedItems', JSON.stringify(Array.from(unlockedItems)));
@@ -140,7 +140,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     // Сохраняем счетчики действий при изменении
     useEffect(() => {
         if (!hippo || isLoading) return;
-        
+
         const saveCounters = async () => {
             try {
                 await Promise.all([
@@ -154,24 +154,25 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 console.error('Failed to save counters:', error);
             }
         };
-        
+
         saveCounters();
     }, [hippo?.feedCount, hippo?.cleanCount, hippo?.playCount, hippo?.sleepCount, hippo?.waterCount, isLoading]);
 
     // Функция обновления статистики
-    const updateStats = useCallback(async (newStats: Partial<HippoStats>) => {
+    const updateStats = useCallback((newStats: Partial<HippoStats>) => {
         setHippo(prev => {
             if (!prev) return prev;
-            
+
+            // Рассчитываем новые значения статистики
             const updatedStats = {
-                health: Math.max(0, Math.min(100, newStats.health ?? prev.stats.health)),
-                satiety: Math.max(0, Math.min(100, newStats.satiety ?? prev.stats.satiety)),
-                happiness: Math.max(0, Math.min(100, newStats.happiness ?? prev.stats.happiness)),
-                cleanliness: Math.max(0, Math.min(100, newStats.cleanliness ?? prev.stats.cleanliness)),
-                energy: Math.max(0, Math.min(100, newStats.energy ?? prev.stats.energy)),
-                thirst: Math.max(0, Math.min(100, newStats.thirst ?? prev.stats.thirst)),
+                health: Math.max(0, Math.min(100, (newStats.health ?? prev.stats.health))),
+                satiety: Math.max(0, Math.min(100, (newStats.satiety ?? prev.stats.satiety))),
+                happiness: Math.max(0, Math.min(100, (newStats.happiness ?? prev.stats.happiness))),
+                cleanliness: Math.max(0, Math.min(100, (newStats.cleanliness ?? prev.stats.cleanliness))),
+                energy: Math.max(0, Math.min(100, (newStats.energy ?? prev.stats.energy))),
+                thirst: Math.max(0, Math.min(100, (newStats.thirst ?? prev.stats.thirst))),
             };
-            
+
             const updatedHippo = {
                 ...prev,
                 stats: updatedStats,
@@ -180,182 +181,194 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 lastPlayed: newStats.happiness !== undefined ? new Date() : prev.lastPlayed,
                 lastWatered: newStats.thirst !== undefined ? new Date() : prev.lastWatered,
             };
-            
+
             // Асинхронно сохраняем статистику
             storage.setItem('hippoStats', JSON.stringify(updatedStats)).catch(
                 error => console.error('Failed to save stats:', error)
             );
-            
+
             return updatedHippo;
         });
     }, []);
 
-    // Функции действий с подсчетом
+    // Функции действий с подсчетом - используя updateStats
     const feed = useCallback(() => {
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updated = {
                 ...prev,
                 feedCount: prev.feedCount + 1,
                 coins: prev.coins + 5
             };
-            
-            updateStats({
-                satiety: Math.min(100, prev.stats.satiety + 30),
-                happiness: Math.min(100, prev.stats.happiness + 10),
-                energy: Math.min(100, prev.stats.energy + 5),
-                thirst: Math.max(0, prev.stats.thirst - 5),
-            });
-            
-            // Асинхронно сохраняем монеты
-            storage.setItem('hippoCoins', updated.coins.toString()).catch(
-                error => console.error('Failed to save coins:', error)
-            );
-            
+
+            // Сохраняем счетчик и монеты
+            Promise.all([
+                storage.setItem('hippoFeedCount', updated.feedCount.toString()),
+                storage.setItem('hippoCoins', updated.coins.toString())
+            ]).catch(error => console.error('Failed to save data:', error));
+
             return updated;
         });
-    }, [updateStats]);
+
+        // Обновляем статистику
+        updateStats({
+            satiety: Math.min(100, (hippo?.stats.satiety || 0) + 30),
+            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
+            energy: Math.min(100, (hippo?.stats.energy || 0) + 5),
+            thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5),
+        });
+    }, [hippo?.stats, updateStats]);
 
     const clean = useCallback(() => {
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updated = {
                 ...prev,
                 cleanCount: prev.cleanCount + 1,
                 coins: prev.coins + 5
             };
-            
-            updateStats({
-                cleanliness: Math.min(100, prev.stats.cleanliness + 40),
-                happiness: Math.min(100, prev.stats.happiness + 5),
-                energy: Math.max(0, prev.stats.energy - 10),
-            });
-            
-            // Асинхронно сохраняем монеты
-            storage.setItem('hippoCoins', updated.coins.toString()).catch(
-                error => console.error('Failed to save coins:', error)
-            );
-            
+
+            // Сохраняем счетчик и монеты
+            Promise.all([
+                storage.setItem('hippoCleanCount', updated.cleanCount.toString()),
+                storage.setItem('hippoCoins', updated.coins.toString())
+            ]).catch(error => console.error('Failed to save data:', error));
+
             return updated;
         });
-    }, [updateStats]);
 
+        // Обновляем статистику
+        updateStats({
+            cleanliness: Math.min(100, (hippo?.stats.cleanliness || 0) + 40),
+            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 5),
+            energy: Math.max(0, (hippo?.stats.energy || 0) - 10),
+        });
+    }, [hippo?.stats, updateStats]);
+
+    // ДОБАВЛЕННЫЕ ФУНКЦИИ
     const play = useCallback(() => {
+        // Проверяем энергию
+        if (hippo && hippo.stats.energy < 20) {
+            return false;
+        }
+
         setHippo(prev => {
             if (!prev) return prev;
-            
-            if (prev.stats.energy < 20) {
-                return prev;
-            }
-            
+
             const updated = {
                 ...prev,
                 playCount: prev.playCount + 1,
                 coins: prev.coins + 10
             };
-            
-            updateStats({
-                happiness: Math.min(100, prev.stats.happiness + 20),
-                energy: Math.max(0, prev.stats.energy - 25),
-                satiety: Math.max(0, prev.stats.satiety - 10),
-                thirst: Math.max(0, prev.stats.thirst - 15),
-            });
-            
-            // Асинхронно сохраняем монеты
-            storage.setItem('hippoCoins', updated.coins.toString()).catch(
-                error => console.error('Failed to save coins:', error)
-            );
-            
+
+            // Сохраняем счетчик и монеты
+            Promise.all([
+                storage.setItem('hippoPlayCount', updated.playCount.toString()),
+                storage.setItem('hippoCoins', updated.coins.toString())
+            ]).catch(error => console.error('Failed to save data:', error));
+
             return updated;
         });
-        
-        return hippo?.stats.energy && hippo.stats.energy >= 20;
-    }, [hippo?.stats.energy, updateStats]);
+
+        // Обновляем статистику
+        updateStats({
+            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 20),
+            energy: Math.max(0, (hippo?.stats.energy || 0) - 25),
+            satiety: Math.max(0, (hippo?.stats.satiety || 0) - 10),
+            thirst: Math.max(0, (hippo?.stats.thirst || 0) - 15),
+        });
+
+        return true;
+    }, [hippo?.stats, updateStats]);
 
     const sleep = useCallback(() => {
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updated = {
                 ...prev,
                 sleepCount: prev.sleepCount + 1,
                 coins: prev.coins + 3
             };
-            
-            updateStats({
-                energy: Math.min(100, prev.stats.energy + 50),
-                health: Math.min(100, prev.stats.health + 5),
-                satiety: Math.max(0, prev.stats.satiety - 5),
-                thirst: Math.max(0, prev.stats.thirst - 10),
-            });
-            
-            // Асинхронно сохраняем монеты
-            storage.setItem('hippoCoins', updated.coins.toString()).catch(
-                error => console.error('Failed to save coins:', error)
-            );
-            
+
+            // Сохраняем счетчик и монеты
+            Promise.all([
+                storage.setItem('hippoSleepCount', updated.sleepCount.toString()),
+                storage.setItem('hippoCoins', updated.coins.toString())
+            ]).catch(error => console.error('Failed to save data:', error));
+
             return updated;
         });
-    }, [updateStats]);
+
+        // Обновляем статистику
+        updateStats({
+            energy: Math.min(100, (hippo?.stats.energy || 0) + 50),
+            health: Math.min(100, (hippo?.stats.health || 0) + 5),
+            satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5),
+            thirst: Math.max(0, (hippo?.stats.thirst || 0) - 10),
+        });
+    }, [hippo?.stats, updateStats]);
 
     const giveWater = useCallback(() => {
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updated = {
                 ...prev,
                 waterCount: prev.waterCount + 1,
                 coins: prev.coins + 4
             };
-            
-            updateStats({
-                thirst: Math.min(100, prev.stats.thirst + 30),
-                health: Math.min(100, prev.stats.health + 10),
-                happiness: Math.min(100, prev.stats.happiness + 15),
-            });
-            
-            // Асинхронно сохраняем монеты
-            storage.setItem('hippoCoins', updated.coins.toString()).catch(
-                error => console.error('Failed to save coins:', error)
-            );
-            
+
+            // Сохраняем счетчик и монеты
+            Promise.all([
+                storage.setItem('hippoWaterCount', updated.waterCount.toString()),
+                storage.setItem('hippoCoins', updated.coins.toString())
+            ]).catch(error => console.error('Failed to save data:', error));
+
             return updated;
         });
-    }, [updateStats]);
+
+        // Обновляем статистику
+        updateStats({
+            thirst: Math.min(100, (hippo?.stats.thirst || 0) + 30),
+            health: Math.min(100, (hippo?.stats.health || 0) + 10),
+            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 15),
+        });
+    }, [hippo?.stats, updateStats]);
 
     // НОВЫЕ ФУНКЦИИ ДЛЯ МАГАЗИНА
     const buyItem = useCallback((itemId: string): boolean => {
         const item = SHOP_ITEMS.find(i => i.id === itemId);
         if (!item || !hippo) return false;
-        
+
         if (hippo.coins >= item.price) {
             setHippo(prev => {
                 if (!prev) return prev;
-                
+
                 const updated = {
                     ...prev,
                     coins: prev.coins - item.price
                 };
-                
+
                 // Асинхронно сохраняем монеты
                 storage.setItem('hippoCoins', updated.coins.toString()).catch(
                     error => console.error('Failed to save coins:', error)
                 );
-                
+
                 return updated;
             });
-            
+
             // Разблокируем предмет
             const newUnlockedItems = new Set([...unlockedItems, itemId]);
             setUnlockedItems(newUnlockedItems);
-            
+
             // Сохраняем разблокированные предметы
             storage.setItem('unlockedItems', JSON.stringify(Array.from(newUnlockedItems))).catch(
                 error => console.error('Failed to save unlocked items:', error)
             );
-            
+
             // Автоматически надеваем, если слот свободен
             const currentOutfit = hippo.outfit || {};
             if (!currentOutfit[item.category as keyof HippoOutfit]) {
@@ -370,25 +383,25 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     const equipItem = useCallback((itemId: string) => {
         const item = SHOP_ITEMS.find(i => i.id === itemId);
         if (!item || !hippo || !unlockedItems.has(itemId)) return;
-        
+
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updatedOutfit = {
                 ...prev.outfit,
                 [item.category]: itemId
             };
-            
+
             const updated = {
                 ...prev,
                 outfit: updatedOutfit
             };
-            
+
             // Сохраняем наряд
             storage.setItem('hippoOutfit', JSON.stringify(updatedOutfit)).catch(
                 error => console.error('Failed to save outfit:', error)
             );
-            
+
             return updated;
         });
     }, [hippo, unlockedItems]);
@@ -396,23 +409,23 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     // Снятие предмета
     const unequipItem = useCallback((category: keyof HippoOutfit) => {
         if (!hippo) return;
-        
+
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updatedOutfit = { ...prev.outfit };
             delete updatedOutfit[category];
-            
+
             const updated = {
                 ...prev,
                 outfit: updatedOutfit
             };
-            
+
             // Сохраняем наряд
             storage.setItem('hippoOutfit', JSON.stringify(updatedOutfit)).catch(
                 error => console.error('Failed to save outfit:', error)
             );
-            
+
             return updated;
         });
     }, [hippo]);
@@ -421,17 +434,17 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     const addCoins = useCallback((amount: number) => {
         setHippo(prev => {
             if (!prev) return prev;
-            
+
             const updated = {
                 ...prev,
                 coins: prev.coins + amount
             };
-            
+
             // Асинхронно сохраняем монеты
             storage.setItem('hippoCoins', updated.coins.toString()).catch(
                 error => console.error('Failed to save coins:', error)
             );
-            
+
             return updated;
         });
     }, []);
@@ -447,11 +460,11 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     // Автоматическое ухудшение статистики
     useEffect(() => {
         if (isLoading) return;
-        
+
         const interval = setInterval(() => {
             setHippo(prev => {
                 if (!prev) return prev;
-                
+
                 const updatedStats = {
                     health: Math.max(0, prev.stats.health - 0.1),
                     satiety: Math.max(0, prev.stats.satiety - 0.2),
@@ -460,24 +473,24 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     energy: Math.min(100, prev.stats.energy + 0.1),
                     thirst: Math.max(0, prev.stats.thirst - 0.25),
                 };
-                
+
                 if (updatedStats.thirst < 20) {
                     updatedStats.health = Math.max(0, updatedStats.health - 0.3);
                     updatedStats.happiness = Math.max(0, updatedStats.happiness - 0.2);
                 }
-                
+
                 // Сохраняем статистику
                 storage.setItem('hippoStats', JSON.stringify(updatedStats)).catch(
                     error => console.error('Failed to save stats:', error)
                 );
-                
+
                 return {
                     ...prev,
                     stats: updatedStats,
                 };
             });
         }, 30000);
-        
+
         return () => clearInterval(interval);
     }, [isLoading]);
 
@@ -493,7 +506,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 name,
                 gender
             };
-            
+
             // Сохраняем данные онбординга
             Promise.all([
                 storage.setItem('hippoName', name),
@@ -504,7 +517,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             ]).catch(error => {
                 console.error('Failed to save onboarding data:', error);
             });
-            
+
             return updatedHippo;
         });
     }, []);
@@ -519,7 +532,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
 
     const setHippoAsync = useCallback((newHippo: Hippo) => {
         setHippo(newHippo);
-        
+
         // Сохраняем все данные бегемотика
         const savePromises = [
             storage.setItem('hippoName', newHippo.name),
@@ -533,7 +546,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             storage.setItem('hippoSleepCount', newHippo.sleepCount.toString()),
             storage.setItem('hippoWaterCount', newHippo.waterCount.toString()),
         ];
-        
+
         Promise.all(savePromises).catch(error => {
             console.error('Failed to save hippo:', error);
         });
@@ -542,7 +555,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     const resetHippo = useCallback(async () => {
         setHippo(initialHippo);
         setUnlockedItems(new Set());
-        
+
         try {
             await Promise.all([
                 storage.removeItem('hippoStats'),
@@ -569,9 +582,9 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         updateStats,
         feed,
         clean,
-        play,
-        sleep,
-        giveWater,
+        play, // Теперь функция определена
+        sleep, // Теперь функция определена
+        giveWater, // Теперь функция определена
         resetHippo,
         hasCompletedOnboarding,
         completeOnboarding,
