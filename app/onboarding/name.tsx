@@ -1,4 +1,5 @@
 // app/onboarding/name.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ С ВЫБОРОМ ПОЛА
+import { storage } from '@/utils/storage';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -10,35 +11,34 @@ export default function NameHippoScreen() {
   const [gender, setGender] = useState<Gender>('');
   const router = useRouter();
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!name.trim()) {
-      Alert.alert('Ошибка', 'Дайте имя вашему бегемотику!');
+      Alert.alert('Ошибка', 'Дайте имя вашему бегемотика!');
       return;
     }
-
     if (name.length > 20) {
       Alert.alert('Ошибка', 'Имя слишком длинное! Максимум 20 символов.');
       return;
     }
-
     if (!gender) {
       Alert.alert('Ошибка', 'Выберите пол вашего бегемотика!');
       return;
     }
 
-    // Сохраняем имя, пол и флаг создания гиппопотама
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hippoName', name.trim());
-      localStorage.setItem('hippoGender', gender);
-      localStorage.setItem('hasCreatedHippo', 'true');
-    }
+    try {
+      await storage.setItem('hippoName', name.trim());
+      await storage.setItem('hippoGender', gender);
+      await storage.setItem('hasCreatedHippo', 'true');
 
-    // Переходим на главную
-    router.push('/(tabs)');
+      // Перенаправляем на главную
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('Ошибка', 'Не удалось сохранить данные');
+    }
   };
 
   const handleBack = () => {
-    router.back(); // Возврат на предыдущий экран
+    router.back();
   };
 
   const handleGenderSelect = (selectedGender: Gender) => {
@@ -53,7 +53,6 @@ export default function NameHippoScreen() {
       <Text style={styles.subtitle}>
         Дайте имя и выберите пол вашего питомца
       </Text>
-
       <View style={styles.formSection}>
         <Text style={styles.sectionLabel}>Имя бегемотика:</Text>
         <TextInput
@@ -68,7 +67,6 @@ export default function NameHippoScreen() {
           Примеры: Пузик, Мото, Река, Счастливчик
         </Text>
       </View>
-
       <View style={styles.formSection}>
         <Text style={styles.sectionLabel}>Пол бегемотика:</Text>
         <View style={styles.genderContainer}>
@@ -87,7 +85,6 @@ export default function NameHippoScreen() {
               Мальчик
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[
               styles.genderButton,
@@ -105,7 +102,6 @@ export default function NameHippoScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
       <View style={styles.buttonRow}>
         <View style={styles.buttonContainer}>
           <Button
@@ -123,7 +119,6 @@ export default function NameHippoScreen() {
           />
         </View>
       </View>
-
       <Link href="/(tabs)" style={styles.skipLink}>
         <Text style={styles.skipText}>Пропустить создание →</Text>
       </Link>

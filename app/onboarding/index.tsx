@@ -1,6 +1,7 @@
 // app/onboarding/index.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
+import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Alert, Button, StyleSheet, Text, View } from 'react-native';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -9,14 +10,15 @@ export default function OnboardingScreen() {
     router.push('/onboarding/name');
   };
 
-  const handleSkip = () => {
-    // Если пропускаем, создаем гиппопотама с именем и полом по умолчанию
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hippoName', 'Бегемотик');
-      localStorage.setItem('hippoGender', 'male'); // ДОБАВЛЯЕМ пол по умолчанию
-      localStorage.setItem('hasCreatedHippo', 'true');
+  const handleSkip = async () => {
+    try {
+      await storage.setItem('hippoName', 'Бегемотик');
+      await storage.setItem('hippoGender', 'male');
+      await storage.setItem('hasCreatedHippo', 'true');
+      router.push('/(tabs)');
+    } catch (error) {
+      Alert.alert('Ошибка', 'Не удалось сохранить данные');
     }
-    router.push('/(tabs)');
   };
 
   return (

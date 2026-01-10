@@ -79,8 +79,8 @@ export interface HippoContextType {
     resetHippo: () => void;
     hasCompletedOnboarding: boolean;
     completeOnboarding: (name: string, gender: HippoGender) => void;
-    // НОВЫЕ ФУНКЦИИ ДЛЯ МАГАЗИНА
-    buyItem: (itemId: string) => boolean;
+    // ФУНКЦИИ ДЛЯ МАГАЗИНА
+    buyItem: (itemId: string) => boolean; // Обратно на boolean
     equipItem: (itemId: string) => void;
     unequipItem: (category: ClothingCategory) => void;
     addCoins: (amount: number) => void;
