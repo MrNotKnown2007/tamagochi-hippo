@@ -2,9 +2,11 @@
 import HippoView from '@/components/HippoView';
 import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
-import { Link } from 'expo-router';
+import { storage } from '@/utils/storage';
+import { Link, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
   ImageBackground,
   StyleSheet,
@@ -21,70 +23,97 @@ const waterButtonImg = require('@/assets/images/water_button.png');
 
 export default function HomeScreen() {
   const { hippo } = useHippo();
+  const router = useRouter();
   const [hippoName, setHippoName] = useState('Бегемотик');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedName = localStorage.getItem('hippoName');
+    loadHippoName();
+  }, [hippo]);
+
+  const loadHippoName = async () => {
+    try {
+      const savedName = await storage.getItem('hippoName');
       if (savedName) {
         setHippoName(savedName);
       }
+    } catch (error) {
+      console.error('Failed to load hippo name:', error);
     }
-  }, [hippo]);
+  };
 
   const getHippoMood = useCallback(() => {
     if (!hippo) return 'happy';
     const { happiness, satiety, energy, cleanliness, thirst } = hippo.stats;
-
     if (thirst < 20) return 'thirsty';
     if (satiety < 20) return 'hungry';
     if (energy < 15) return 'sleepy';
     if (cleanliness < 25) return 'dirty';
     if (happiness < 30) return 'sad';
-
     return 'happy';
   }, [hippo]);
 
   const navigateTo = useCallback((path: string) => {
-    if (typeof window !== 'undefined') {
-      window.location.href = path;
+    // Используем router для навигации с правильной типизацией
+    if (path === '/(tabs)/care') {
+      router.push('/(tabs)/care' as any);
+    } else if (path === '/(tabs)/shop') {
+      router.push('/(tabs)/shop' as any);
+    } else if (path === '/(tabs)/stats') {
+      router.push('/(tabs)/stats' as any);
     }
-  }, []);
+  }, [router]);
 
-  const handleResetHippo = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      if (confirm('Вы уверены? Это удалит всё')) {
-        localStorage.removeItem('hippoName');
-        localStorage.removeItem('hippoStats');
-        localStorage.removeItem('hasCreatedHippo');
-        localStorage.removeItem('hippoOutfit');
-        localStorage.removeItem('hippoCoins');
-        localStorage.removeItem('unlockedItems');
-        window.location.href = '/onboarding';
-      }
-    }
-  }, []);
+  const handleResetHippo = useCallback(async () => {
+    Alert.alert(
+      'Сброс бегемотика',
+      'Вы уверены? Это удалит все данные о вашем бегемотике.',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        {
+          text: 'Удалить',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await storage.removeItem('hippoName');
+              await storage.removeItem('hippoStats');
+              await storage.removeItem('hasCreatedHippo');
+              await storage.removeItem('hippoOutfit');
+              await storage.removeItem('hippoCoins');
+              await storage.removeItem('unlockedItems');
+
+              // Также сбрасываем счетчики действий
+              await storage.removeItem('hippoFeedCount');
+              await storage.removeItem('hippoCleanCount');
+              await storage.removeItem('hippoPlayCount');
+              await storage.removeItem('hippoSleepCount');
+              await storage.removeItem('hippoWaterCount');
+
+              router.replace('/onboarding');
+            } catch (error) {
+              Alert.alert('Ошибка', 'Не удалось сбросить данные');
+            }
+          }
+        }
+      ]
+    );
+  }, [router]);
 
   return (
     <View style={styles.mainContainer}>
       <View style={styles.sidebarLeft} />
-
       <View style={styles.centerContainer}>
         <ImageBackground source={backgroundImage} style={styles.background} resizeMode="stretch">
           {/* НОВЫЙ КОНТЕЙНЕР С МОНЕТАМИ В ПРАВОМ ВЕРХНЕМ УГЛУ */}
           <View style={styles.coinContainer}>
             <ThemedText style={styles.coinText}>💰 {hippo?.coins || 0}</ThemedText>
           </View>
-
           <View style={styles.contentWrapper}>
             <View style={styles.header}>
               <ThemedText style={styles.title}>{hippoName}</ThemedText>
             </View>
-
             <View style={styles.hippoContainer}>
               <HippoView mood={getHippoMood()} size="medium" />
             </View>
-
             <View style={styles.actionButtonsContainer}>
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.satiety || 0) * 0.6) }]}>
@@ -94,7 +123,6 @@ export default function HomeScreen() {
                   <Image source={feedButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.cleanliness || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#2196F3' }]} />
@@ -103,7 +131,6 @@ export default function HomeScreen() {
                   <Image source={bathButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.happiness || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#E91E63' }]} />
@@ -112,7 +139,6 @@ export default function HomeScreen() {
                   <Image source={playButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.energy || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#9C27B0' }]} />
@@ -121,7 +147,6 @@ export default function HomeScreen() {
                   <Image source={sleepButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.thirst || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#4CAF50' }]} />
@@ -134,31 +159,25 @@ export default function HomeScreen() {
           </View>
         </ImageBackground>
       </View>
-
       <View style={styles.sidebarRight}>
         <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/care')}>
           <ThemedText style={styles.sideButtonEmoji}>🏥</ThemedText>
           <ThemedText style={styles.sideButtonText}>Уход</ThemedText>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/shop')}>
           <ThemedText style={styles.sideButtonEmoji}>🛍️</ThemedText>
           <ThemedText style={styles.sideButtonText}>Магазин</ThemedText>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/stats')}>
           <ThemedText style={styles.sideButtonEmoji}>📊</ThemedText>
           <ThemedText style={styles.sideButtonText}>Статистика</ThemedText>
         </TouchableOpacity>
-
         <View style={styles.sideButtonDivider} />
-
         <Link href="/onboarding" asChild>
           <TouchableOpacity style={styles.sideButton}>
             <ThemedText style={styles.sideButtonText}>Имя</ThemedText>
           </TouchableOpacity>
         </Link>
-
         <TouchableOpacity style={styles.sideButton} onPress={handleResetHippo}>
           <ThemedText style={[styles.sideButtonText, styles.resetText]}>Сброс</ThemedText>
         </TouchableOpacity>
@@ -174,27 +193,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#1a1a1a',
   },
-
   // ===== БОКОВЫЕ ПАНЕЛИ =====
   sidebarLeft: {
     width: '15%',
     backgroundColor: '#1a1a1a',
   },
-
   // ===== ЦЕНТРАЛЬНАЯ ОБЛАСТЬ С ФОНОМ =====
   centerContainer: {
     flex: 1,
     width: '70%',
-    position: 'relative', // Для позиционирования контейнера с монетами
-    overflow: 'hidden', // чтобы фон не выходил за пределы
+    position: 'relative',
+    overflow: 'hidden',
   },
-
   background: {
     flex: 1,
     width: '100%',
     height: '100%',
   },
-
   // ===== КОНТЕЙНЕР С МОНЕТАМИ =====
   coinContainer: {
     position: 'absolute',
@@ -206,13 +221,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     zIndex: 10,
   },
-
   coinText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFD700',
   },
-
   contentWrapper: {
     flex: 1,
     flexDirection: 'column',
@@ -220,27 +233,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
   },
-
   // ===== ЗАГОЛОВОК БЕЗ ЛОГОТИПА =====
   header: {
     alignItems: 'center',
     marginBottom: 8,
   },
-
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#1a1a1a',
     textAlign: 'center',
   },
-
   // ===== КОНТЕЙНЕР С БЕГЕМОТИКОМ =====
   hippoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
   },
-
   // ===== КНОПКИ ДЕЙСТВИЙ =====
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -250,13 +259,11 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 8,
   },
-
   buttonWithStats: {
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: 120,
   },
-
   statBarContainer: {
     width: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
@@ -265,12 +272,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
-
   statBar: {
     width: '100%',
     height: '100%',
   },
-
   circleButton: {
     width: 70,
     height: 70,
@@ -283,13 +288,11 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 5,
   },
-
   buttonImage: {
     width: 70,
     height: 70,
     resizeMode: 'stretch',
   },
-
   // ===== ПРАВАЯ БОКОВАЯ ПАНЕЛЬ =====
   sidebarRight: {
     width: '15%',
@@ -300,7 +303,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 12,
   },
-
   sideButton: {
     width: '100%',
     paddingVertical: 12,
@@ -312,26 +314,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-
   sideButtonEmoji: {
     fontSize: 20,
     marginBottom: 4,
   },
-
   sideButtonText: {
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
-
   sideButtonDivider: {
     width: '80%',
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginVertical: 8,
   },
-
   resetText: {
     color: '#FF5252',
   },
