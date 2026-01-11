@@ -4,10 +4,65 @@ import StatSection from '@/components/StatSection';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useHippo } from '@/context/HippoContext';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function StatsScreen() {
     const { hippo, getAvailableItems } = useHippo();
+    const router = useRouter();
+
+    const handleResetHippo = () => {
+        Alert.alert(
+            'Сброс бегемотика',
+            'Вы уверены? Это удалит все данные о вашем бегемотике.',
+            [
+                { text: 'Отмена', style: 'cancel' },
+                {
+                    text: 'Удалить',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            // Для веба - очищаем localStorage
+                            if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                                localStorage.clear();
+                            }
+
+                            // Для телефона - очищаем через storage API
+                            const keysToRemove = [
+                                'hippoName',
+                                'hippoGender',
+                                'hippoAge',
+                                'hippoStats',
+                                'hasCreatedHippo',
+                                'hippoOutfit',
+                                'hippoCoins',
+                                'unlockedItems',
+                                'hippoFeedCount',
+                                'hippoCleanCount',
+                                'hippoPlayCount',
+                                'hippoSleepCount',
+                                'hippoWaterCount',
+                            ];
+
+                            for (const key of keysToRemove) {
+                                try {
+                                    await storage.removeItem(key);
+                                } catch (e) {
+                                    // Игнорируем ошибки для отдельных ключей
+                                }
+                            }
+                            
+                            // Перенаправляем на онбординг
+                            router.replace('/onboarding');
+                        } catch (error) {
+                            console.error('Reset error:', error);
+                            Alert.alert('Ошибка', 'Не удалось сбросить данные');
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     if (!hippo) {
         return (
@@ -320,6 +375,13 @@ export default function StatsScreen() {
                         )}
                     </View>
                 </StatSection>
+
+                {/* КНОПКА СБРОСА */}
+                <View style={styles.resetSection}>
+                    <TouchableOpacity style={styles.resetButton} onPress={handleResetHippo}>
+                        <ThemedText style={styles.resetButtonText}>🗑️ Сбросить бегемотика</ThemedText>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
         </ThemedView>
     );
@@ -451,5 +513,26 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         borderLeftWidth: 4,
         borderLeftColor: '#4CAF50',
+    },
+    resetSection: {
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    resetButton: {
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        backgroundColor: '#FF5252',
+        borderRadius: 12,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    resetButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#fff',
     },
 });

@@ -47,11 +47,11 @@ const getMoodImage = (mood: string, age: string) => {
 const getSizeStyle = (size: string) => {
     switch (size) {
         case 'small':
-            return { width: 120, height: 120 };
+            return { width: 80, height: 80 };
         case 'large':
-            return { width: 300, height: 300 };
-        default: // medium
             return { width: 200, height: 200 };
+        default: // medium
+            return { width: 140, height: 140 };
     }
 };
 

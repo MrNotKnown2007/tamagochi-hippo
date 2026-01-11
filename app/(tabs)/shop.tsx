@@ -1,389 +1,457 @@
-// app/(tabs)/shop.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// app/(tabs)/shop.tsx - ГАРДЕРОБ С МОДАЛЬНЫМ ОКНОМ
+import HippoView from '@/components/HippoView';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { useHippo } from '@/context/HippoContext';
-import { ClothingCategory, ClothingItem as ClothingItemType } from '@/types/hippo';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  ImageBackground,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
-const categories: { id: ClothingCategory; name: string; emoji: string }[] = [
-  { id: 'head', name: 'Голова', emoji: '🧢' },
-  { id: 'upper', name: 'Верх', emoji: '👕' },
-  { id: 'lower', name: 'Низ', emoji: '👖' },
-  { id: 'feet', name: 'Ноги', emoji: '👟' },
+const wardrobeBg = require('@/screens/shop/wardrobe.png');
+
+// Категории одежды с цветами
+const categories = [
+  { id: 'head', name: 'Головной убор', emoji: '🧢', color: '#D8B5E8' },
+  { id: 'upper', name: 'Верх', emoji: '👕', color: '#A8D5FF' },
+  { id: 'lower', name: 'Низ', emoji: '👖', color: '#B5E8A8' },
+  { id: 'feet', name: 'Обувь', emoji: '👟', color: '#FFD4A8' },
+  { id: 'costume', name: 'Костюмы', emoji: '🧸', color: '#FFE8A8' },
 ];
 
-type RarityType = 'common' | 'rare' | 'epic';
-
-const rarityColors: Record<RarityType, string> = {
-  common: '#8B8B8B',
-  rare: '#4A90E2',
-  epic: '#FF6B00'
-};
-
-const rarityNames: Record<RarityType, string> = {
-  common: 'Обычный',
-  rare: 'Редкий',
-  epic: 'Эпический'
-};
-
 export default function ShopScreen() {
+  const router = useRouter();
   const { hippo, buyItem, equipItem, unequipItem, getAvailableItems } = useHippo();
-  const [selectedCategory, setSelectedCategory] = useState<ClothingCategory>('head');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
-  const items = getAvailableItems().filter(item => item.category === selectedCategory);
+  const currentCategory = categories.find(c => c.id === selectedCategory);
+  const items = selectedCategory ? getAvailableItems().filter(item => item.category === selectedCategory) : [];
+  const currentItem = items[currentItemIndex];
   const currentOutfit = hippo?.outfit || {};
+  const isEquipped = currentItem && currentOutfit[selectedCategory as keyof typeof currentOutfit] === currentItem.id;
+  const isUnlocked = currentItem?.unlocked;
 
-  const handleBuyItem = (itemId: string, price: number) => {
-    if ((hippo?.coins || 0) < price) {
-      Alert.alert('Недостаточно монет', `Вам нужно ещё ${price - (hippo?.coins || 0)} монет`);
+  const handleCategoryPress = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setCurrentItemIndex(0);
+  };
+
+  const handleNextItem = () => {
+    if (currentItemIndex < items.length - 1) {
+      setCurrentItemIndex(currentItemIndex + 1);
+    }
+  };
+
+  const handlePrevItem = () => {
+    if (currentItemIndex > 0) {
+      setCurrentItemIndex(currentItemIndex - 1);
+    }
+  };
+
+  const handleBuyItem = () => {
+    if (!currentItem) return;
+
+    if ((hippo?.coins || 0) < currentItem.price) {
+      Alert.alert(
+        'Недостаточно монет',
+        `Вам нужно ещё ${currentItem.price - (hippo?.coins || 0)} монет`
+      );
       return;
     }
 
-    if (buyItem(itemId)) {
-      Alert.alert('Успех!', 'Предмет куплен и добавлен в инвентарь');
-    } else {
-      Alert.alert('Ошибка', 'Не удалось купить предмет');
+    if (buyItem(currentItem.id)) {
+      // Автоматически надеваем после покупки
+      equipItem(currentItem.id);
     }
   };
 
-  const handleEquipItem = (itemId: string) => {
-    equipItem(itemId);
+  const handleEquipItem = () => {
+    if (!currentItem) return;
+    if (isEquipped) {
+      unequipItem(selectedCategory as any);
+    } else {
+      equipItem(currentItem.id);
+    }
   };
 
-  const handleUnequipItem = (category: ClothingCategory) => {
-    unequipItem(category);
-  };
-
-  const renderCategoryButton = ({ id, name, emoji }: typeof categories[0]) => (
-    <TouchableOpacity
-      key={id}
-      style={[
-        styles.categoryButton,
-        selectedCategory === id && styles.categoryButtonSelected
-      ]}
-      onPress={() => setSelectedCategory(id)}
-    >
-      <ThemedText style={styles.categoryEmoji}>{emoji}</ThemedText>
-      <ThemedText style={[
-        styles.categoryText,
-        selectedCategory === id && styles.categoryTextSelected
-      ]}>
-        {name}
-      </ThemedText>
-    </TouchableOpacity>
-  );
-
-  const renderItem = ({ item }: { item: ClothingItemType }) => {
-    const isUnlocked = item.unlocked;
-    const isEquipped = currentOutfit[item.category as keyof typeof currentOutfit] === item.id;
-    const canAfford = (hippo?.coins || 0) >= item.price;
-    const rarity = item.rarity as RarityType;
-
-    return (
-      <View style={styles.itemCard}>
-        <View style={styles.itemHeader}>
-          <ThemedText style={styles.itemEmoji}>{item.icon}</ThemedText>
-          <View style={styles.itemInfo}>
-            <ThemedText style={styles.itemName}>{item.name}</ThemedText>
-            <ThemedText style={[styles.itemRarity, { color: rarityColors[rarity] }]}>
-              {rarityNames[rarity]}
-            </ThemedText>
-          </View>
-        </View>
-
-        <ThemedText style={styles.itemDescription}>{item.description}</ThemedText>
-
-        <View style={styles.itemFooter}>
-          <ThemedText style={styles.itemPrice}>💰 {item.price}</ThemedText>
-
-          {isUnlocked ? (
-            isEquipped ? (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.equippedButton]}
-                onPress={() => handleUnequipItem(item.category)}
-              >
-                <ThemedText style={styles.actionButtonText}>Снять</ThemedText>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.equipButton]}
-                onPress={() => handleEquipItem(item.id)}
-              >
-                <ThemedText style={styles.actionButtonText}>Надеть</ThemedText>
-              </TouchableOpacity>
-            )
-          ) : (
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                styles.buyButton,
-                !canAfford && styles.disabledButton
-              ]}
-              onPress={() => handleBuyItem(item.id, item.price)}
-              disabled={!canAfford}
-            >
-              <ThemedText style={styles.actionButtonText}>
-                {canAfford ? 'Купить' : 'Не хватает'}
-              </ThemedText>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    );
+  const handleCloseModal = () => {
+    setSelectedCategory(null);
+    setCurrentItemIndex(0);
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText type="title">🛍️ Магазин</ThemedText>
-        <View style={styles.coinDisplay}>
-          <ThemedText style={styles.coinText}>Ваши монеты: </ThemedText>
-          <ThemedText style={styles.coinAmount}>💰 {hippo?.coins || 0}</ThemedText>
+    <View style={styles.container}>
+      <ImageBackground source={wardrobeBg} style={styles.background} resizeMode="stretch">
+        {/* КНОПКА НАЗАД */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ThemedText style={styles.backButtonText}>←</ThemedText>
+        </TouchableOpacity>
+
+        {/* МОНЕТЫ СВЕРХУ */}
+        <View style={styles.coinContainer}>
+          <ThemedText style={styles.coinText}>💰 {hippo?.coins || 0}</ThemedText>
         </View>
-      </View>
 
-      <ThemedText style={styles.subtitle}>
-        Покупайте одежду для вашего бегемотика
-      </ThemedText>
-
-      {/* Категории */}
-      <View style={styles.categoriesContainer}>
-        {categories.map(renderCategoryButton)}
-      </View>
-
-      {/* Список предметов */}
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.itemsList}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <ThemedText style={styles.emptyText}>
-              В этой категории пока нет предметов
-            </ThemedText>
-          </View>
-        }
-      />
-
-      {/* Информация о надетом */}
-      <View style={styles.currentOutfitContainer}>
-        <ThemedText style={styles.outfitTitle}>Сейчас надето:</ThemedText>
-        <View style={styles.outfitItems}>
-          {Object.entries(currentOutfit).map(([category, itemId]) => {
-            const item = getAvailableItems().find(i => i.id === itemId);
-            if (!item) return null;
-
-            return (
-              <View key={category} style={styles.outfitItem}>
-                <ThemedText style={styles.outfitEmoji}>{item.icon}</ThemedText>
-                <ThemedText style={styles.outfitName}>{item.name}</ThemedText>
-              </View>
-            );
-          })}
-
-          {Object.keys(currentOutfit).length === 0 && (
-            <ThemedText style={styles.noOutfitText}>
-              Ничего не надето
-            </ThemedText>
+        {/* БЕГЕМОТИК В ЦЕНТРЕ */}
+        <View style={styles.hippoSection}>
+          {hippo && (
+            <HippoView mood="default" size="medium" age={(hippo.age as unknown as 'child' | 'parent') || 'child'} />
           )}
         </View>
-      </View>
-    </ThemedView>
+
+        {/* КАТЕГОРИИ СПРАВА */}
+        <View style={styles.categoriesPanel}>
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.categoryButton,
+                { backgroundColor: category.color },
+                selectedCategory === category.id && styles.categoryButtonSelected,
+              ]}
+              onPress={() => handleCategoryPress(category.id)}
+            >
+              <ThemedText style={styles.categoryEmoji}>{category.emoji}</ThemedText>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ImageBackground>
+
+      {/* МОДАЛЬНОЕ ОКНО ВЫБОРА ПРЕДМЕТА */}
+      <Modal
+        visible={selectedCategory !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* ЗАГОЛОВОК */}
+            <View style={styles.modalHeader}>
+              <ThemedText style={styles.modalTitle}>
+                {currentCategory?.emoji} {currentCategory?.name}
+              </ThemedText>
+              <TouchableOpacity onPress={handleCloseModal}>
+                <ThemedText style={styles.closeButton}>✕</ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            {items.length > 0 ? (
+              <>
+                {/* ПРЕДМЕТ */}
+                <View style={styles.itemDisplay}>
+                  <ThemedText style={styles.itemEmoji}>{currentItem?.icon}</ThemedText>
+                  <ThemedText style={styles.itemName}>{currentItem?.name}</ThemedText>
+                  <ThemedText style={styles.itemDescription}>{currentItem?.description}</ThemedText>
+
+                  {/* СТАТУС */}
+                  {isUnlocked ? (
+                    <View style={styles.statusBadge}>
+                      <ThemedText style={styles.statusText}>✓ Куплено</ThemedText>
+                    </View>
+                  ) : (
+                    <View style={[styles.statusBadge, styles.priceBadge]}>
+                      <ThemedText style={styles.priceText}>💰 {currentItem?.price}</ThemedText>
+                    </View>
+                  )}
+                </View>
+
+                {/* НАВИГАЦИЯ */}
+                <View style={styles.navigationContainer}>
+                  <TouchableOpacity
+                    style={[styles.arrowButton, currentItemIndex === 0 && styles.arrowButtonDisabled]}
+                    onPress={handlePrevItem}
+                    disabled={currentItemIndex === 0}
+                  >
+                    <ThemedText style={styles.arrowText}>←</ThemedText>
+                  </TouchableOpacity>
+
+                  <ThemedText style={styles.itemCounter}>
+                    {currentItemIndex + 1} / {items.length}
+                  </ThemedText>
+
+                  <TouchableOpacity
+                    style={[styles.arrowButton, currentItemIndex === items.length - 1 && styles.arrowButtonDisabled]}
+                    onPress={handleNextItem}
+                    disabled={currentItemIndex === items.length - 1}
+                  >
+                    <ThemedText style={styles.arrowText}>→</ThemedText>
+                  </TouchableOpacity>
+                </View>
+
+                {/* КНОПКИ ДЕЙСТВИЙ */}
+                <View style={styles.actionButtonsContainer}>
+                  {isUnlocked ? (
+                    <TouchableOpacity
+                      style={[styles.actionButton, isEquipped ? styles.removeButton : styles.equipButton]}
+                      onPress={handleEquipItem}
+                    >
+                      <ThemedText style={styles.actionButtonText}>
+                        {isEquipped ? '❌ Снять' : '✅ Надеть'}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.buyButton]}
+                      onPress={handleBuyItem}
+                    >
+                      <ThemedText style={styles.actionButtonText}>🛒 Купить</ThemedText>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <ThemedText style={styles.emptyText}>Нет предметов в этой категории</ThemedText>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#1a1a1a',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  // ===== КНОПКА НАЗАД =====
+  backButton: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
+    zIndex: 10,
   },
-  subtitle: {
-    marginTop: 4,
-    marginBottom: 20,
-    opacity: 0.8,
-    fontSize: 16,
+  backButtonText: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: 'bold',
   },
-  coinDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+  // ===== МОНЕТЫ =====
+  coinContainer: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
+    borderRadius: 16,
+    zIndex: 10,
   },
   coinText: {
     fontSize: 14,
-    opacity: 0.9,
-  },
-  coinAmount: {
-    fontSize: 16,
     fontWeight: 'bold',
     color: '#FFD700',
   },
-  categoriesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 8,
-  },
-  categoryButton: {
+  // ===== БЕГЕМОТИК =====
+  hippoSection: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    paddingTop: 450, // НАСТРОЙКА: увеличено для опускания бегемотика
+  },
+  // ===== КАТЕГОРИИ СПРАВА =====
+  categoriesPanel: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -100 }],
+    gap: 12,
+  },
+  categoryButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   categoryButtonSelected: {
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    borderColor: '#4A90E2',
+    transform: [{ scale: 1.1 }],
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
   },
   categoryEmoji: {
-    fontSize: 24,
-    marginBottom: 4,
+    fontSize: 28,
   },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  categoryTextSelected: {
-    color: '#4A90E2',
-  },
-  itemsList: {
-    paddingBottom: 20,
-  },
-  itemCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  itemHeader: {
-    flexDirection: 'row',
+  // ===== МОДАЛЬНОЕ ОКНО =====
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#D9D0C5',
+    borderRadius: 24,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  // ===== ЗАГОЛОВОК МОДАЛИ =====
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+  },
+  closeButton: {
+    fontSize: 24,
+    color: '#A65437',
+    fontWeight: 'bold',
+  },
+  // ===== ОТОБРАЖЕНИЕ ПРЕДМЕТА =====
+  itemDisplay: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 16,
   },
   itemEmoji: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  itemInfo: {
-    flex: 1,
+    fontSize: 64,
+    marginBottom: 12,
   },
   itemName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  itemRarity: {
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 8,
   },
   itemDescription: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
     marginBottom: 12,
-    lineHeight: 20,
+    maxWidth: '90%',
   },
-  itemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  statusBadge: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
-  itemPrice: {
-    fontSize: 18,
+  priceBadge: {
+    backgroundColor: '#FFB74D',
+  },
+  statusText: {
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#fff',
+  },
+  priceText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  // ===== НАВИГАЦИЯ =====
+  navigationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  arrowButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#A65437',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  arrowButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.5,
+  },
+  arrowText: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  itemCounter: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  // ===== КНОПКИ ДЕЙСТВИЙ =====
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
   },
   actionButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 20,
-    minWidth: 100,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   buyButton: {
     backgroundColor: '#4CAF50',
   },
   equipButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#4CAF50',
   },
-  equippedButton: {
-    backgroundColor: '#9C27B0',
-  },
-  disabledButton: {
-    backgroundColor: '#9E9E9E',
-    opacity: 0.6,
+  removeButton: {
+    backgroundColor: '#FF6B9D',
   },
   actionButtonText: {
-    color: 'white',
-    fontWeight: '600',
     fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
   },
+  // ===== ПУСТО =====
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    paddingVertical: 40,
   },
   emptyText: {
-    fontSize: 16,
-    opacity: 0.5,
-    textAlign: 'center',
-  },
-  currentOutfitContainer: {
-    marginTop: 'auto',
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  outfitTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  outfitItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  outfitItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(74, 144, 226, 0.3)',
-  },
-  outfitEmoji: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  outfitName: {
     fontSize: 14,
-    fontWeight: '500',
-  },
-  noOutfitText: {
-    fontSize: 14,
-    opacity: 0.5,
-    fontStyle: 'italic',
+    color: '#666',
   },
 });

@@ -564,6 +564,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 storage.removeItem('hippoStats'),
                 storage.removeItem('hippoName'),
                 storage.removeItem('hippoGender'),
+                storage.removeItem('hippoAge'),
                 storage.removeItem('hasCreatedHippo'),
                 storage.removeItem('hippoOutfit'),
                 storage.removeItem('hippoCoins'),
