@@ -4,6 +4,23 @@ import { Hippo, HippoContextType, HippoGender, HippoOutfit, HippoStats } from '@
 import { storage } from '@/utils/storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
+// Вспомогательные функции для разных возрастов
+const getAgeMultiplier = (age: 'child' | 'parent'): number => {
+    return age === 'child' ? 1.2 : 0.8; // Малыш получает больше, взрослый - меньше
+};
+
+const getEnergyMultiplier = (age: 'child' | 'parent'): number => {
+    return age === 'child' ? 1.3 : 0.7; // Малышу нужно больше энергии
+};
+
+const getSleepMultiplier = (age: 'child' | 'parent'): number => {
+    return age === 'child' ? 1.5 : 0.9; // Малышу сон полезнее
+};
+
+const getFoodMultiplier = (age: 'child' | 'parent'): number => {
+    return age === 'child' ? 1.4 : 0.8; // Малыш больше растет от еды
+};
+
 const HippoContext = createContext<HippoContextType | undefined>(undefined);
 
 const initialStats: HippoStats = {
@@ -178,43 +195,51 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const feed = useCallback(() => {
+        if (!hippo) return;
+
+        const ageMultiplier = getFoodMultiplier(hippo.age);
+
         setHippo(prev => {
             if (!prev) return prev;
             const updated = {
                 ...prev,
                 feedCount: prev.feedCount + 1,
             };
-            Promise.all([
-                storage.setItem('hippoFeedCount', updated.feedCount.toString()),
-                storage.setItem('hippoCoins', updated.coins.toString())
-            ]).catch(error => console.error('Failed to save data:', error));
+            storage.setItem('hippoFeedCount', updated.feedCount.toString())
+                .catch(error => console.error('Failed to save feed count:', error));
             return updated;
         });
+
         updateStats({
-            satiety: Math.min(100, (hippo?.stats.satiety || 0) + 30),
-            energy: Math.min(100, (hippo?.stats.energy || 0) + 5),
-            thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5),
+            satiety: Math.min(100, (hippo.stats.satiety || 0) + Math.round(30 * ageMultiplier)),
+            energy: Math.min(100, (hippo.stats.energy || 0) + Math.round(5 * ageMultiplier)),
+            thirst: Math.max(0, (hippo.stats.thirst || 0) - Math.round(5 * ageMultiplier)),
         });
-    }, [hippo?.stats, updateStats]);
+    }, [hippo, updateStats]);
 
     const clean = useCallback(() => {
+        if (!hippo) return;
+
+        const ageMultiplier = getAgeMultiplier(hippo.age);
+
         setHippo(prev => {
             if (!prev) return prev;
             const updated = {
                 ...prev,
                 cleanCount: prev.cleanCount + 1,
             };
-            Promise.all([
-                storage.setItem('hippoCleanCount', updated.cleanCount.toString()),
-                storage.setItem('hippoCoins', updated.coins.toString())
-            ]).catch(error => console.error('Failed to save data:', error));
+            storage.setItem('hippoCleanCount', updated.cleanCount.toString())
+                .catch(error => console.error('Failed to save clean count:', error));
             return updated;
         });
+
         updateStats({
-            cleanliness: Math.min(100, (hippo?.stats.cleanliness || 0) + 40),
-            energy: Math.max(0, (hippo?.stats.energy || 0) - 10),
+            cleanliness: Math.min(100, (hippo.stats.cleanliness || 0) + Math.round(40 * ageMultiplier)),
+            energy: Math.max(0, (hippo.stats.energy || 0) - Math.round(10 * (hippo.age === 'child' ? 0.8 : 1.2))), // Малыш меньше устает от купания
+            // Для малыша: больше здоровья от чистоты
+            health: Math.min(100, (hippo.stats.health || 0) + (hippo.age === 'child' ? 4 : 2)),
         });
-    }, [hippo?.stats, updateStats]);
+    }, [hippo, updateStats]);
 
     // ФУНКЦИЯ addCoins ДОЛЖНА БЫТЬ ОБЪЯВЛЕНА ДО completeGame
     const addCoins = useCallback((amount: number) => {
@@ -233,10 +258,15 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
 
     // ОБНОВЛЕННАЯ ФУНКЦИЯ play() - теперь возвращает boolean
     const play = useCallback((): boolean => {
-        // Проверяем энергию (20% минимум для игры)
-        if (hippo && hippo.stats.energy < 20) {
+        if (!hippo) return false;
+
+        // Проверяем энергию с учетом возраста
+        const minEnergy = 20
+        if (hippo.stats.energy < minEnergy) {
             return false; // Недостаточно энергии
         }
+
+        const ageMultiplier = hippo.age === 'child' ? 1.2 : 0.9; // Малыш получает больше настроения от игр
 
         setHippo(prev => {
             if (!prev) return prev;
@@ -249,16 +279,16 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             return updated;
         });
 
-        // Обновляем статистику: списываем энергию, добавляем немного настроения
+        // Обновляем статистику
         updateStats({
-            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
-            energy: Math.max(0, (hippo?.stats.energy || 0) - 20),
-            satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5),
-            thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5),
+            happiness: Math.min(100, (hippo.stats.happiness || 0) + Math.round(10 * ageMultiplier)),
+            energy: Math.max(0, (hippo.stats.energy || 0) - Math.round(20 * (hippo.age === 'child' ? 1.3 : 0.8))), // Малыш больше устает от игр
+            satiety: Math.max(0, (hippo.stats.satiety || 0) - Math.round(5 * (hippo.age === 'child' ? 1.2 : 0.9))), // Малыш больше голодает после игр
+            thirst: Math.max(0, (hippo.stats.thirst || 0) - Math.round(5 * (hippo.age === 'child' ? 1.5 : 0.8))), // Малыш больше хочет пить
         });
 
-        return true; // Игра успешно начата
-    }, [hippo?.stats, updateStats]);
+        return true;
+    }, [hippo, updateStats]);
 
     // Функция для завершения игры с бонусами
     const completeGame = useCallback((score: number) => {
@@ -278,44 +308,50 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     }, [hippo?.stats, addCoins, updateStats]);
 
     const sleep = useCallback(() => {
+        if (!hippo) return;
+
+        const sleepMultiplier = getSleepMultiplier(hippo.age);
+
         setHippo(prev => {
             if (!prev) return prev;
             const updated = {
                 ...prev,
                 sleepCount: prev.sleepCount + 1,
             };
-            Promise.all([
-                storage.setItem('hippoSleepCount', updated.sleepCount.toString()),
-                storage.setItem('hippoCoins', updated.coins.toString())
-            ]).catch(error => console.error('Failed to save data:', error));
+            storage.setItem('hippoSleepCount', updated.sleepCount.toString())
+                .catch(error => console.error('Failed to save sleep count:', error));
             return updated;
         });
+
         updateStats({
-            energy: Math.min(100, (hippo?.stats.energy || 0) + 50),
-            health: Math.min(100, (hippo?.stats.health || 0) + 5),
-            satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5),
-            thirst: Math.max(0, (hippo?.stats.thirst || 0) - 10),
+            energy: Math.min(100, (hippo.stats.energy || 0) + Math.round(50 * sleepMultiplier)),
+            health: Math.min(100, (hippo.stats.health || 0) + Math.round(5 * sleepMultiplier)),
+            satiety: Math.max(0, (hippo.stats.satiety || 0) - Math.round(5 * (hippo.age === 'child' ? 0.7 : 1.3))), // Малыш меньше голодает во сне
+            thirst: Math.max(0, (hippo.stats.thirst || 0) - Math.round(10 * (hippo.age === 'child' ? 0.7 : 1.3))), // Малыш меньше хочет пить
         });
-    }, [hippo?.stats, updateStats]);
+    }, [hippo, updateStats]);
 
     const giveWater = useCallback(() => {
+        if (!hippo) return;
+
+        const ageMultiplier = getAgeMultiplier(hippo.age);
+
         setHippo(prev => {
             if (!prev) return prev;
             const updated = {
                 ...prev,
                 waterCount: prev.waterCount + 1,
             };
-            Promise.all([
-                storage.setItem('hippoWaterCount', updated.waterCount.toString()),
-                storage.setItem('hippoCoins', updated.coins.toString())
-            ]).catch(error => console.error('Failed to save data:', error));
+            storage.setItem('hippoWaterCount', updated.waterCount.toString())
+                .catch(error => console.error('Failed to save water count:', error));
             return updated;
         });
+
         updateStats({
-            thirst: Math.min(100, (hippo?.stats.thirst || 0) + 30),
-            health: Math.min(100, (hippo?.stats.health || 0) + 10),
+            thirst: Math.min(100, (hippo.stats.thirst || 0) + Math.round(30 * ageMultiplier)),
+            health: Math.min(100, (hippo.stats.health || 0) + Math.round(10 * ageMultiplier)),
         });
-    }, [hippo?.stats, updateStats]);
+    }, [hippo, updateStats]);
 
     const buyItem = useCallback((itemId: string): boolean => {
         const item = SHOP_ITEMS.find(i => i.id === itemId);
