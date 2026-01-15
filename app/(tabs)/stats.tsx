@@ -40,10 +40,16 @@ const successIcon = require('@/models/icons/stats/succes.png');
 // Иконки для модалей
 const homeIcon = require('@/models/icons/games/home.png');
 
+// Масштабирующий коэффициент для веб (1 для мобилов, больше для веб)
+const SCALE = 1;
+
 export default function StatsScreen() {
     const { hippo } = useHippo();
     const [rewardsModalVisible, setRewardsModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
+    
+    // Функция для масштабирования размеров
+    const scale_size = (size: number) => Math.round(size * SCALE);
 
     if (!hippo) {
         return <View style={styles.container} />;
@@ -61,23 +67,23 @@ export default function StatsScreen() {
         <View style={styles.container}>
             <ImageBackground source={statsBg} style={styles.background} resizeMode="stretch">
                 {/* TITLE */}
-                <Image source={titleImg} style={styles.title} />
+                <Image source={titleImg} style={[styles.title, { paddingTop: scale_size(100), height: scale_size(100), marginBottom: scale_size(-120) }]} />
 
                 {/* MAIN FRAME */}
-                <ImageBackground source={frameImg} style={styles.mainFrame} resizeMode="stretch">
-                    <View style={styles.frameContent}>
+                <ImageBackground source={frameImg} style={[styles.mainFrame, { margin: scale_size(10) }]} resizeMode="stretch">
+                    <View style={[styles.frameContent, { padding: scale_size(50) }]}>
                         {/* TOP ROW: REWARDS + INFO (только на первой странице) */}
                         {currentPage === 0 && (
-                            <View style={styles.topSectionPage0}>
+                            <View style={[styles.topSectionPage0, { gap: scale_size(8), marginBottom: scale_size(10), marginTop: scale_size(50) }]}>
                                 <TouchableOpacity style={styles.rewardsBtnContainer} onPress={() => setRewardsModalVisible(true)}>
-                                    <Image source={rewardsButtonImg} style={styles.rewardsBtnImage} />
+                                    <Image source={rewardsButtonImg} style={[styles.rewardsBtnImage, { width: scale_size(130), height: scale_size(130), marginBottom: scale_size(-40), marginLeft: scale_size(60), marginTop: scale_size(-40) }]} />
                                 </TouchableOpacity>
 
-                                <ImageBackground source={smallFrame} style={styles.infoBoxPage0} resizeMode="stretch">
-                                    <View style={styles.infoBoxContentPage0}>
-                                        <Image source={hippo.gender === 'male' ? maleIcon : femaleIcon} style={styles.genderIconPage0} />
-                                        <ThemedText style={styles.infoTextPage0}>{hippo.name}</ThemedText>
-                                        <ThemedText style={styles.infoTextPage0}>{hippo.age === 'child' ? 'Малыш' : 'Взрослый'}</ThemedText>
+                                <ImageBackground source={smallFrame} style={[styles.infoBoxPage0, { height: scale_size(50), marginBottom: scale_size(10) }]} resizeMode="stretch">
+                                    <View style={[styles.infoBoxContentPage0, { paddingHorizontal: scale_size(12), gap: scale_size(20) }]}>
+                                        <Image source={hippo.gender === 'male' ? maleIcon : femaleIcon} style={[styles.genderIconPage0, { width: scale_size(32), height: scale_size(32) }]} />
+                                        <ThemedText style={[styles.infoTextPage0, { fontSize: scale_size(12) }]}>{hippo.name}</ThemedText>
+                                        <ThemedText style={[styles.infoTextPage0, { fontSize: scale_size(12) }]}>{hippo.age === 'child' ? 'Малыш' : 'Взрослый'}</ThemedText>
                                     </View>
                                 </ImageBackground>
                             </View>
@@ -85,18 +91,18 @@ export default function StatsScreen() {
 
                         {/* MAIN CONTENT - PAGE 0: INDICATORS ONLY */}
                         {currentPage === 0 && (
-                            <View style={styles.mainContent}>
+                            <View style={[styles.mainContent, { gap: scale_size(10) }]}>
                                 <View style={styles.fullWidthFrame}>
-                                    <ImageBackground source={bigFrame} style={styles.bigFrameBox} resizeMode="stretch">
-                                        <View style={styles.bigFrameContent}>
-                                            <ThemedText style={styles.sectionTitleHeader}>Показатели</ThemedText>
+                                    <ImageBackground source={bigFrame} style={[styles.bigFrameBox, { padding: scale_size(8), marginBottom: scale_size(70), marginTop: scale_size(-20) }]} resizeMode="stretch">
+                                        <View style={[styles.bigFrameContent, { marginBottom: scale_size(5) }]}>
+                                            <ThemedText style={[styles.sectionTitleHeader, { fontSize: scale_size(16), marginBottom: scale_size(12) }]}>Показатели</ThemedText>
                                             <View style={styles.statsGrid}>
-                                                <StatRow icon={healthIcon} label="Здоровье" value={Math.round(hippo.stats.health)} color="#FF6B6B" />
-                                                <StatRow icon={satietyIcon} label="Сытость" value={Math.round(hippo.stats.satiety)} color="#FFB84D" />
-                                                <StatRow icon={moodIcon} label="Настроение" value={Math.round(hippo.stats.happiness)} color="#4ECDC4" />
-                                                <StatRow icon={cleanIcon} label="Чистота" value={Math.round(hippo.stats.cleanliness)} color="#95E1D3" />
-                                                <StatRow icon={energyIcon} label="Энергия" value={Math.round(hippo.stats.energy)} color="#FFD966" />
-                                                <StatRow icon={knowledgeIcon} label="Знания" value={Math.round(hippo.stats.thirst)} color="#87CEEB" />
+                                                <StatRow icon={healthIcon} label="Здоровье" value={Math.round(hippo.stats.health)} color="#FF6B6B" scale_size={scale_size} />
+                                                <StatRow icon={satietyIcon} label="Сытость" value={Math.round(hippo.stats.satiety)} color="#FFB84D" scale_size={scale_size} />
+                                                <StatRow icon={moodIcon} label="Настроение" value={Math.round(hippo.stats.happiness)} color="#4ECDC4" scale_size={scale_size} />
+                                                <StatRow icon={cleanIcon} label="Чистота" value={Math.round(hippo.stats.cleanliness)} color="#95E1D3" scale_size={scale_size} />
+                                                <StatRow icon={energyIcon} label="Энергия" value={Math.round(hippo.stats.energy)} color="#FFD966" scale_size={scale_size} />
+                                                <StatRow icon={knowledgeIcon} label="Знания" value={Math.round(hippo.stats.thirst)} color="#87CEEB" scale_size={scale_size} />
                                             </View>
                                         </View>
                                     </ImageBackground>
@@ -106,16 +112,16 @@ export default function StatsScreen() {
 
                         {/* PAGE 1: ACTIVITY */}
                         {currentPage === 1 && (
-                            <View style={styles.mainContent}>
+                            <View style={[styles.mainContent, { gap: scale_size(10) }]}>
                                 <View style={styles.fullWidthFrame}>
-                                    <ImageBackground source={mediumFrame} style={styles.mediumFrameBoxPage} resizeMode="stretch">
+                                    <ImageBackground source={mediumFrame} style={[styles.mediumFrameBoxPage, { padding: scale_size(12), marginBottom: scale_size(70), marginTop: scale_size(60) }]} resizeMode="stretch">
                                         <View style={styles.mediumFrameContentPage}>
-                                            <ThemedText style={styles.sectionTitleHeaderPage1}>Активность</ThemedText>
+                                            <ThemedText style={[styles.sectionTitleHeaderPage1, { fontSize: scale_size(24), marginBottom: scale_size(12), marginTop: scale_size(20) }]}>Активность</ThemedText>
                                             <View style={styles.activityGridPage}>
-                                                <ActivityRowPage icon={feedIcon} label="Покормлен" value={hippo.feedCount || 0} />
-                                                <ActivityRowPage icon={playIcon} label="Поиграл" value={hippo.playCount || 0} />
-                                                <ActivityRowPage icon={cleanIcon} label="Помыт" value={hippo.cleanCount || 0} />
-                                                <ActivityRowPage icon={sleepIcon} label="Поспал" value={hippo.sleepCount || 0} />
+                                                <ActivityRowPage icon={feedIcon} label="Покормлен" value={hippo.feedCount || 0} scale_size={scale_size} />
+                                                <ActivityRowPage icon={playIcon} label="Поиграл" value={hippo.playCount || 0} scale_size={scale_size} />
+                                                <ActivityRowPage icon={cleanIcon} label="Помыт" value={hippo.cleanCount || 0} scale_size={scale_size} />
+                                                <ActivityRowPage icon={sleepIcon} label="Поспал" value={hippo.sleepCount || 0} scale_size={scale_size} />
                                             </View>
                                         </View>
                                     </ImageBackground>
@@ -125,17 +131,17 @@ export default function StatsScreen() {
 
                         {/* PAGE 2: ACHIEVEMENTS */}
                         {currentPage === 2 && (
-                            <View style={styles.mainContent}>
+                            <View style={[styles.mainContent, { gap: scale_size(10) }]}>
                                 <View style={styles.fullWidthFrame}>
-                                    <ImageBackground source={bigFrame} style={styles.bigFrameBoxPage} resizeMode="stretch">
+                                    <ImageBackground source={bigFrame} style={[styles.bigFrameBoxPage, { padding: scale_size(12), marginBottom: scale_size(70), marginTop: scale_size(90) }]} resizeMode="stretch">
                                         <View style={styles.bigFrameContentPage}>
-                                            <ThemedText style={styles.sectionTitleHeaderPage2}>Достижения</ThemedText>
+                                            <ThemedText style={[styles.sectionTitleHeaderPage2, { fontSize: scale_size(16), marginBottom: scale_size(20) }]}>Достижения</ThemedText>
                                             <View style={styles.achievementsGridPage}>
-                                                <AchievementRowPage icon={bubbleIcon} label="Пузыри" plays={hippo.gameStats.bubbleGamePlays} record={hippo.gameStats.bubbleGameRecord} />
-                                                <AchievementRowPage icon={cardIcon} label="Память" plays={hippo.gameStats.memoryGamePlays} />
-                                                <AchievementRowPage icon={diceIcon} label="Кубики" plays={hippo.gameStats.thirdGamePlays} />
-                                                <AchievementRowPage icon={brainIcon} label="Всего игр" plays={hippo.gameStats.totalGamePlays} />
-                                                <AchievementRowPage icon={moneyIcon} label="Заработано" plays={hippo.gameStats.totalCoinsEarned} />
+                                                <AchievementRowPage icon={bubbleIcon} label="Пузыри" plays={hippo.gameStats.bubbleGamePlays} record={hippo.gameStats.bubbleGameRecord} scale_size={scale_size} />
+                                                <AchievementRowPage icon={cardIcon} label="Память" plays={hippo.gameStats.memoryGamePlays} scale_size={scale_size} />
+                                                <AchievementRowPage icon={diceIcon} label="Кубики" plays={hippo.gameStats.thirdGamePlays} scale_size={scale_size} />
+                                                <AchievementRowPage icon={brainIcon} label="Всего игр" plays={hippo.gameStats.totalGamePlays} scale_size={scale_size} />
+                                                <AchievementRowPage icon={moneyIcon} label="Заработано" plays={hippo.gameStats.totalCoinsEarned} scale_size={scale_size} />
                                             </View>
                                         </View>
                                     </ImageBackground>
@@ -145,7 +151,7 @@ export default function StatsScreen() {
                     </View>
 
                     {/* HIPPO - FRONT LAYER */}
-                    <Image source={hippoImg} style={styles.hippo} />
+                    <Image source={hippoImg} style={[styles.hippo, { bottom: scale_size(-80), left: scale_size(-20), width: scale_size(220), height: scale_size(220) }]} />
                 </ImageBackground>
 
                 {/* NAVIGATION ARROWS */}
@@ -160,10 +166,10 @@ export default function StatsScreen() {
             {/* REWARDS MODAL */}
             <Modal visible={rewardsModalVisible} transparent animationType="fade" onRequestClose={() => setRewardsModalVisible(false)}>
                 <View style={styles.modalOverlay}>
-                    <ImageBackground source={smallFrame} style={styles.modalFrame} resizeMode="stretch">
+                    <ImageBackground source={smallFrame} style={[styles.modalFrame, { width: '100%', aspectRatio: 0.9 }]} resizeMode="stretch">
                         <View style={styles.modalContent}>
-                            <ThemedText style={styles.modalTitle}>Награды</ThemedText>
-                            <ThemedText style={styles.modalText}>Наград еще нет(((</ThemedText>
+                            <ThemedText style={[styles.modalTitle, { fontSize: scale_size(24) }]}>Награды</ThemedText>
+                            <ThemedText style={[styles.modalText, { fontSize: scale_size(16) }]}>Наград еще нет(((</ThemedText>
                             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setRewardsModalVisible(false)}>
                                 <Image source={homeIcon} style={styles.modalCloseIcon} />
                             </TouchableOpacity>
@@ -175,48 +181,48 @@ export default function StatsScreen() {
     );
 }
 
-function StatRow({ icon, label, value, color }: any) {
+function StatRow({ icon, label, value, color, scale_size }: any) {
     return (
-        <View style={styles.statRow}>
-            <Image source={icon} style={styles.rowIcon} />
+        <View style={[styles.statRow, { gap: scale_size(1) }]}>
+            <Image source={icon} style={[styles.rowIcon, { width: scale_size(32), height: scale_size(32) }]} />
             <View style={styles.rowInfo}>
-                <ThemedText style={styles.rowLabel}>{label}</ThemedText>
-                <View style={styles.progressBar}>
+                <ThemedText style={[styles.rowLabel, { fontSize: scale_size(9), marginBottom: scale_size(2) }]}>{label}</ThemedText>
+                <View style={[styles.progressBar, { height: scale_size(4), marginTop: scale_size(-5) }]}>
                     <View style={[styles.progressFill, { width: `${value}%`, backgroundColor: color }]} />
                 </View>
             </View>
-            <ThemedText style={styles.rowValue}>{value}%</ThemedText>
+            <ThemedText style={[styles.rowValue, { fontSize: scale_size(9), marginLeft: scale_size(10), marginRight: scale_size(10) }]}>{value}%</ThemedText>
         </View>
     );
 }
 
-function ActivityRowPage({ icon, label, value }: any) {
+function ActivityRowPage({ icon, label, value, scale_size }: any) {
     return (
-        <View style={styles.activityRowPage}>
-            <Image source={icon} style={styles.actIconPage} />
-            <ThemedText style={styles.actLabelPage}>{label}</ThemedText>
-            <ThemedText style={styles.actValuePage}>{value}</ThemedText>
+        <View style={[styles.activityRowPage, { gap: scale_size(8) }]}>
+            <Image source={icon} style={[styles.actIconPage, { width: scale_size(48), height: scale_size(48) }]} />
+            <ThemedText style={[styles.actLabelPage, { fontSize: scale_size(16) }]}>{label}</ThemedText>
+            <ThemedText style={[styles.actValuePage, { fontSize: scale_size(18), marginRight: scale_size(10) }]}>{value}</ThemedText>
         </View>
     );
 }
 
-function AchievementRowPage({ icon, label, plays, record }: any) {
+function AchievementRowPage({ icon, label, plays, record, scale_size }: any) {
     return (
         <View>
-            <View style={styles.achievementRowPage}>
-                <Image source={icon} style={styles.achievementIconPage} />
+            <View style={[styles.achievementRowPage, { gap: scale_size(12) }]}>
+                <Image source={icon} style={[styles.achievementIconPage, { width: scale_size(36), height: scale_size(36), marginTop: scale_size(2) }]} />
                 <View style={styles.achievementTextContainer}>
-                    <ThemedText style={styles.achievementLabelPage}>{label}</ThemedText>
+                    <ThemedText style={[styles.achievementLabelPage, { fontSize: scale_size(16), marginTop: scale_size(5) }]}>{label}</ThemedText>
                 </View>
-                <ThemedText style={styles.achievementValuePage}>{plays}</ThemedText>
+                <ThemedText style={[styles.achievementValuePage, { fontSize: scale_size(18), marginTop: scale_size(5), marginRight: scale_size(10) }]}>{plays}</ThemedText>
             </View>
             {record !== undefined && (
-                <View style={styles.achievementRecordRow}>
-                    <Image source={successIcon} style={styles.recordIconPage} />
+                <View style={[styles.achievementRecordRow, { gap: scale_size(12), marginTop: scale_size(2), marginRight: scale_size(10) }]}>
+                    <Image source={successIcon} style={[styles.recordIconPage, { width: scale_size(36), height: scale_size(36), marginBottom: scale_size(1), marginTop: scale_size(10) }]} />
                     <View style={styles.achievementTextContainer}>
-                        <ThemedText style={styles.achievementRecordLabelPage}>Рекорд</ThemedText>
+                        <ThemedText style={[styles.achievementRecordLabelPage, { fontSize: scale_size(16) }]}>Рекорд</ThemedText>
                     </View>
-                    <ThemedText style={styles.achievementRecordValuePage}>{record}</ThemedText>
+                    <ThemedText style={[styles.achievementRecordValuePage, { fontSize: scale_size(18) }]}>{record}</ThemedText>
                 </View>
             )}
         </View>
@@ -232,86 +238,59 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        paddingTop: 100,
         width: '100%',
-        height: 100,
         resizeMode: 'contain',
-        marginTop: 10,
-        marginBottom: -120,
         zIndex: 5,
     },
     mainFrame: {
         flex: 1,
-        margin: 10,
         marginTop: 0,
     },
     frameContent: {
         flex: 1,
-        padding: 50,
     },
     topSectionPage0: {
         flexDirection: 'column',
-        gap: 8,
         marginBottom: 10,
-        marginTop: 50,
     },
     rewardsBtnContainer: {
         alignSelf: 'flex-start',
     },
     rewardsBtnImage: {
-        width: 130,
-        height: 130,
         resizeMode: 'contain',
-        marginBottom: -40,
-        marginLeft: 60,
-        marginTop: -40,
     },
     infoBoxPage0: {
-        height: 50,
         justifyContent: 'center',
-        marginBottom: 10,
     },
     infoBoxContentPage0: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        gap: 20,
     },
     genderIconPage0: {
-        width: 32,
-        height: 32,
         resizeMode: 'contain',
     },
     infoTextPage0: {
         color: '#7A4A1F',
-        fontSize: 12,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
     },
     mainContent: {
         flex: 1,
         flexDirection: 'row',
-        gap: 10,
     },
     fullWidthFrame: {
         flex: 1,
     },
     bigFrameBox: {
         flex: 1,
-        padding: 8,
-        marginBottom: 70,
-        marginTop: -20,
     },
     bigFrameContent: {
         flex: 1,
-        marginBottom: 5,
     },
     sectionTitleHeader: {
         color: '#FFE4A1',
-        fontSize: 16,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginBottom: 12,
         textAlign: 'center',
     },
     statsGrid: {
@@ -321,11 +300,8 @@ const styles = StyleSheet.create({
     statRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 1,
     },
     rowIcon: {
-        width: 32,
-        height: 32,
         resizeMode: 'contain',
     },
     rowInfo: {
@@ -333,48 +309,33 @@ const styles = StyleSheet.create({
     },
     rowLabel: {
         color: '#7A4A1F',
-        fontSize: 9,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginBottom: 2,
     },
     progressBar: {
-        height: 4,
         backgroundColor: 'rgba(0,0,0,0.1)',
         borderRadius: 2,
         overflow: 'hidden',
-        marginTop: -5,
     },
     progressFill: {
         height: '100%',
     },
     rowValue: {
         color: '#1a1a1a',
-        fontSize: 9,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        minWidth: 28,
         textAlign: 'right',
-        marginLeft: 10,
-        marginRight: 10,
     },
-    //second page
     mediumFrameBoxPage: {
         flex: 1,
-        padding: 12,
-        marginBottom: 70,
-        marginTop: 60,
     },
     mediumFrameContentPage: {
         flex: 1,
     },
     sectionTitleHeaderPage1: {
         color: '#FFE4A1',
-        fontSize: 24,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginBottom: 12,
-        marginTop: 20,
         textAlign: 'center',
     },
     activityGridPage: {
@@ -384,44 +345,31 @@ const styles = StyleSheet.create({
     activityRowPage: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        marginVertical: 0,
     },
     actIconPage: {
-        width: 48,
-        height: 48,
         resizeMode: 'contain',
     },
     actLabelPage: {
         color: '#7A4A1F',
-        fontSize: 16,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
         flex: 1,
     },
     actValuePage: {
         color: '#1a1a1a',
-        fontSize: 18,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginRight: 10,
     },
-    //third page
     bigFrameBoxPage: {
         flex: 1,
-        padding: 12,
-        marginBottom: 70,
-        marginTop: 90,
     },
     bigFrameContentPage: {
         flex: 1,
     },
     sectionTitleHeaderPage2: {
         color: '#FFE4A1',
-        fontSize: 16,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginBottom: 20,
         textAlign: 'center',
     },
     achievementsGridPage: {
@@ -434,70 +382,47 @@ const styles = StyleSheet.create({
     achievementRowPage: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: 12,
     },
     achievementIconPage: {
-        width: 36,
-        height: 36,
         resizeMode: 'contain',
-        marginTop: 2,
     },
     achievementTextContainer: {
         flex: 1,
     },
     achievementLabelPage: {
         color: '#7A4A1F',
-        fontSize: 16,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginTop: 5,
     },
     achievementValuePage: {
         color: '#1a1a1a',
-        fontSize: 18,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginTop: 5,
-        marginRight: 10,
     },
     achievementRecordRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
-        marginTop: 2,
-        marginRight: 10,
     },
     recordIconPage: {
-        width: 36,
-        height: 36,
         resizeMode: 'contain',
-        marginBottom: 1,
-        marginTop: 10,
     },
     achievementRecordLabelPage: {
         color: '#7A4A1F',
-        fontSize: 16,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
     },
     achievementRecordValuePage: {
         color: '#1a1a1a',
-        fontSize: 18,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
     },
     achievementRecordPage: {
         color: '#FFD700',
-        fontSize: 12,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
     },
     hippo: {
         position: 'absolute',
-        bottom: -80,
-        left: -20,
-        width: 220,
-        height: 220,
         resizeMode: 'contain',
         zIndex: 100,
     },
@@ -508,8 +433,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalFrame: {
-        width: '100%',
-        aspectRatio: 0.9,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -517,24 +440,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         flex: 1,
-        paddingBottom: 30,
     },
     modalTitle: {
         color: '#7A4A1F',
-        fontSize: 24,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
-        marginBottom: 20,
     },
     modalText: {
         color: '#7A4A1F',
-        fontSize: 16,
         fontFamily: 'Comic Sans MS',
-        marginBottom: 30,
     },
     modalCloseBtn: {
-        width: 110,
-        height: 110,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -551,7 +467,6 @@ const styles = StyleSheet.create({
     },
     closeBtnText: {
         color: '#fff',
-        fontSize: 12,
         fontFamily: 'Comic Sans MS',
         fontWeight: 'bold',
     },

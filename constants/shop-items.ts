@@ -9,7 +9,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Стильная бейсболка для бегемотика',
         price: 250,
         category: 'head',
-        icon: require('@/models/icons/shop/head.png'),
+        icon: '🧢',
         rarity: 'common',
         unlocked: false
     },
@@ -19,7 +19,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Модная кепка',
         price: 250,
         category: 'head',
-        icon: require('@/models/icons/shop/head.png'),
+        icon: '🧢',
         rarity: 'common',
         unlocked: false
     },
@@ -29,7 +29,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Королевская корона',
         price: 1000,
         category: 'head',
-        icon: require('@/models/icons/shop/head.png'),
+        icon: '👑',
         rarity: 'epic',
         unlocked: false
     },
@@ -39,7 +39,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Элегантная шляпа',
         price: 500,
         category: 'head',
-        icon: require('@/models/icons/shop/head.png'),
+        icon: '🎩',
         rarity: 'rare',
         unlocked: false
     },
@@ -49,7 +49,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Защитный шлем',
         price: 500,
         category: 'head',
-        icon: require('@/models/icons/shop/head.png'),
+        icon: '⛑️',
         rarity: 'rare',
         unlocked: false
     },
@@ -72,7 +72,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Простая футболка',
         price: 250,
         category: 'upper',
-        icon: require('@/models/icons/shop/body.png'),
+        icon: '👕',
         rarity: 'common',
         unlocked: false
     },
@@ -82,7 +82,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Строгая рубашка',
         price: 250,
         category: 'upper',
-        icon: require('@/models/icons/shop/body.png'),
+        icon: '👔',
         rarity: 'common',
         unlocked: false
     },
@@ -92,7 +92,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Теплая кофта',
         price: 500,
         category: 'upper',
-        icon: require('@/models/icons/shop/body.png'),
+        icon: '🧶',
         rarity: 'rare',
         unlocked: false
     },
@@ -102,7 +102,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Стильная куртка',
         price: 1000,
         category: 'upper',
-        icon: require('@/models/icons/shop/body.png'),
+        icon: '🧥',
         rarity: 'epic',
         unlocked: false
     },
@@ -112,7 +112,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Красивое платье',
         price: 500,
         category: 'upper',
-        icon: require('@/models/icons/shop/body.png'),
+        icon: '👗',
         rarity: 'rare',
         unlocked: false
     },
@@ -135,7 +135,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Удобные шорты',
         price: 250,
         category: 'lower',
-        icon: require('@/models/icons/shop/pants.png'),
+        icon: '🩳',
         rarity: 'common',
         unlocked: false
     },
@@ -145,7 +145,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Классические джинсы',
         price: 250,
         category: 'lower',
-        icon: require('@/models/icons/shop/pants.png'),
+        icon: '👖',
         rarity: 'common',
         unlocked: false
     },
@@ -155,7 +155,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Элегантная юбка',
         price: 500,
         category: 'lower',
-        icon: require('@/models/icons/shop/pants.png'),
+        icon: '👗',
         rarity: 'rare',
         unlocked: false
     },
@@ -165,7 +165,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Для активного отдыха',
         price: 250,
         category: 'lower',
-        icon: require('@/models/icons/shop/pants.png'),
+        icon: '🩳',
         rarity: 'common',
         unlocked: false
     },
@@ -175,7 +175,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Деловой костюм',
         price: 1000,
         category: 'lower',
-        icon: require('@/models/icons/shop/pants.png'),
+        icon: '🎩',
         rarity: 'epic',
         unlocked: false
     },
@@ -187,7 +187,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Спортивные кроссовки',
         price: 250,
         category: 'feet',
-        icon: require('@/models/icons/shop/shoes.png'),
+        icon: '👟',
         rarity: 'common',
         unlocked: false
     },
@@ -197,7 +197,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Домашние тапочки',
         price: 250,
         category: 'feet',
-        icon: require('@/models/icons/shop/shoes.png'),
+        icon: '🩴',
         rarity: 'common',
         unlocked: false
     },
@@ -207,7 +207,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Классические туфли',
         price: 500,
         category: 'feet',
-        icon: require('@/models/icons/shop/shoes.png'),
+        icon: '👞',
         rarity: 'rare',
         unlocked: false
     },
@@ -217,7 +217,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Теплые сапоги',
         price: 500,
         category: 'feet',
-        icon: require('@/models/icons/shop/shoes.png'),
+        icon: '🥾',
         rarity: 'rare',
         unlocked: false
     },
@@ -227,7 +227,7 @@ export const SHOP_ITEMS: ClothingItem[] = [
         description: 'Роскошные сандалии',
         price: 1000,
         category: 'feet',
-        icon: require('@/models/icons/shop/shoes.png'),
+        icon: '👡',
         rarity: 'epic',
         unlocked: false
     },

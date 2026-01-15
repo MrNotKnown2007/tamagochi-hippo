@@ -1,707 +1,288 @@
-// components/mini-games/DiceGuessGame.tsx
 import { useHippo } from '@/context/HippoContext';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-    Dimensions,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
+import { Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const { width } = Dimensions.get('window');
-
-// Импорты картинок
-const winImg = require('@/models/icons/stats/win.png');
-const scoreBoardImg = require('@/models/icons/stats/score_board.png');
+const bgImg = require('@/screens/games/DiceGuessGame.png');
+const titleImg = require('@/models/icons/games/Guess/guess_number.png');
+const scoreBoardImg = require('@/models/icons/games/Guess/score_board.png');
+const numberBoardImg = require('@/models/icons/games/Guess/goal_board.png');
+const whichNumberImg = require('@/models/icons/games/Guess/which_number.png');
+const happyHippoImg = require('@/models/icons/games/Guess/happy_hippo.png');
+const buttonBoardImg = require('@/models/icons/games/Guess/number_board.png');
+const button1Img = require('@/models/icons/games/Guess/button1.png');
+const button2Img = require('@/models/icons/games/Guess/button2.png');
+const button3Img = require('@/models/icons/games/Guess/button3.png');
+const button4Img = require('@/models/icons/games/Guess/button4.png');
+const button5Img = require('@/models/icons/games/Guess/button5.png');
+const button6Img = require('@/models/icons/games/Guess/button6.png');
+const square1Img = require('@/models/icons/games/Guess/square1.png');
+const square2Img = require('@/models/icons/games/Guess/square2.png');
+const square3Img = require('@/models/icons/games/Guess/square3.png');
+const square4Img = require('@/models/icons/games/Guess/square4.png');
+const square5Img = require('@/models/icons/games/Guess/square5.png');
+const square6Img = require('@/models/icons/games/Guess/square6.png');
 const homeIcon = require('@/models/icons/games/home.png');
-const restartIcon = require('@/models/icons/games/restart.png');
 
 interface DiceGuessGameProps {
-    onGameEnd: (score: number) => void;
-    onClose: () => void;
+  onGameEnd: (score: number) => void;
+  onClose: () => void;
 }
 
-const DICE_EMOJIS = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-const DICE_NUMBERS = [1, 2, 3, 4, 5, 6];
+const BUTTON_IMAGES = [button1Img, button2Img, button3Img, button4Img, button5Img, button6Img];
+const SQUARE_IMAGES = [square1Img, square2Img, square3Img, square4Img, square5Img, square6Img];
 
 export default function DiceGuessGame({ onGameEnd, onClose }: DiceGuessGameProps) {
-    const { updateGameStats } = useHippo();
-    const router = useRouter();
-    const [score, setScore] = useState(0);
-    const [round, setRound] = useState(1);
-    const [totalRounds] = useState(10);
-    const [targetNumber, setTargetNumber] = useState(1);
-    const [playerGuess, setPlayerGuess] = useState<number | null>(null);
-    const [gameActive, setGameActive] = useState(true);
-    const [isRolling, setIsRolling] = useState(false);
-    const [resultMessage, setResultMessage] = useState('');
-    const [streak, setStreak] = useState(0);
-    const [showResult, setShowResult] = useState(false);
-    const [resultWin, setResultWin] = useState(false);
-    const [roundsPlayed, setRoundsPlayed] = useState(0);
-    const [gameCompleted, setGameCompleted] = useState(false); // Новое состояние для завершения игры
+  const { updateGameStats } = useHippo();
+  const router = useRouter();
+  const [score, setScore] = useState(0);
+  const [round, setRound] = useState(1);
+  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const [correctNumber, setCorrectNumber] = useState(1);
+  const [topSquareNumber, setTopSquareNumber] = useState(1);
+  const [gameActive, setGameActive] = useState(true);
+  const [isRolling, setIsRolling] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [resultWin, setResultWin] = useState(false);
+  const [roundsPlayed, setRoundsPlayed] = useState(0);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [showBottomSquare, setShowBottomSquare] = useState(false);
+  const [guessedCount, setGuessedCount] = useState(0);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [emojiType, setEmojiType] = useState<'happy' | 'sad'>('happy');
 
-    // Завершение игры - теперь просто показываем экран завершения
-    useEffect(() => {
-        if (roundsPlayed >= totalRounds && gameActive && !gameCompleted) {
-            setGameActive(false);
-            setGameCompleted(true); // Устанавливаем флаг завершения игры
-        }
-    }, [roundsPlayed, gameActive, totalRounds, gameCompleted]);
+  useEffect(() => {
+    startNewRound();
+  }, []);
 
-    const rollDice = () => {
-        return Math.floor(Math.random() * 6) + 1;
-    };
+  useEffect(() => {
+    if (roundsPlayed >= 10 && gameActive && !gameCompleted) {
+      setGameActive(false);
+      setGameCompleted(true);
+    }
+  }, [roundsPlayed, gameActive, gameCompleted]);
 
-    const startNewRound = () => {
-        // Бросаем кубик для нового раунда
-        const newTarget = rollDice();
-        setTargetNumber(newTarget);
-        setPlayerGuess(null);
-        setResultMessage('');
-    };
+  const rollDice = () => Math.floor(Math.random() * 6) + 1;
 
-    // Инициализация первого раунда
-    useEffect(() => {
-        const initialTarget = rollDice();
-        setTargetNumber(initialTarget);
-    }, []);
+  const startNewRound = () => {
+    setCorrectNumber(rollDice());
+    setSelectedNumber(null);
+    setShowResult(false);
+    setTopSquareNumber(1);
+    setShowBottomSquare(false);
+  };
 
-    const handleGuess = (number: number) => {
-        if (isRolling || showResult || !gameActive || playerGuess !== null) return;
+  const handleButtonPress = (number: number) => {
+    if (isRolling || !gameActive || selectedNumber !== null) return;
+    setSelectedNumber(number);
+    setShowBottomSquare(true);
+    setIsRolling(true);
 
-        // Сохраняем выбор игрока
-        setPlayerGuess(number);
-        setIsRolling(true);
+    let rollCount = 0;
+    const finalResult = rollDice();
 
-        // Анимация броска
-        let rollCount = 0;
-        const maxRolls = 8;
+    const interval = setInterval(() => {
+      setTopSquareNumber(prev => (prev >= 6 ? 1 : prev + 1));
+      rollCount++;
 
-        // Генерируем финальный результат заранее
-        const finalResult = rollDice();
+      if (rollCount >= 12) {
+        clearInterval(interval);
+        setTopSquareNumber(finalResult);
+        setTimeout(() => checkResult(number, finalResult), 1000);
+      }
+    }, 100);
+  };
 
-        const interval = setInterval(() => {
-            setTargetNumber(prev => {
-                let newNum = prev + 1;
-                if (newNum > 6) newNum = 1;
-                return newNum;
-            });
-            rollCount++;
+  const checkResult = (guess: number, finalNumber: number) => {
+    setIsRolling(false);
+    const win = guess === finalNumber;
+    if (win) {
+      setScore(prev => prev + 15);
+      setGuessedCount(prev => prev + 1);
+    }
+    setEmojiType(win ? 'happy' : 'sad');
+    setShowEmoji(true);
+    
+    // Автоматически переходим к следующему раунду через 1.5 секунды
+    setTimeout(() => {
+      setShowEmoji(false);
+      handleContinue();
+    }, 1500);
+  };
 
-            if (rollCount >= maxRolls) {
-                clearInterval(interval);
-                // Устанавливаем финальный результат после анимации
-                setTargetNumber(finalResult);
-                setTimeout(() => {
-                    checkResult(number, finalResult); // Передаем выбор игрока напрямую
-                }, 100);
-            }
-        }, 150);
-    };
+  const handleContinue = () => {
+    setShowResult(false);
+    setRoundsPlayed(prev => prev + 1);
 
-    const checkResult = (guess: number, finalNumber: number) => {
-        setIsRolling(false);
+    if (roundsPlayed + 1 < 10) {
+      setRound(prev => prev + 1);
+      setTimeout(() => startNewRound(), 500);
+    } else {
+      setGameActive(false);
+      setGameCompleted(true);
+    }
+  };
 
-        const win = guess === finalNumber;
+  const handleHome = () => {
+    updateGameStats('third', score);
+    onGameEnd(score);
+    router.push('/(tabs)');
+  };
 
-        if (win) {
-            const newStreak = streak + 1;
-            setStreak(newStreak);
-            const points = 15 + Math.floor(newStreak * 3);
-            setScore(prev => prev + points);
-            setResultWin(true);
-            setResultMessage(`🎉 Угадали! Выпало ${finalNumber}`);
-        } else {
-            setStreak(0);
-            setResultWin(false);
-            setResultMessage(`😢 Не угадали! Выпало ${finalNumber}, а вы выбрали ${guess}`);
-        }
-
-        setShowResult(true);
-    };
-
-    const handleContinue = () => {
-        setShowResult(false);
-        setRoundsPlayed(prev => prev + 1);
-
-        if (roundsPlayed + 1 < totalRounds) {
-            // Увеличиваем раунд и начинаем новый
-            setRound(prev => prev + 1);
-            setTimeout(() => {
-                startNewRound();
-            }, 500);
-        } else {
-            // Завершаем игру, но не закрываем автоматически
-            setGameActive(false);
-            setGameCompleted(true);
-        }
-    };
-
-    const handleEndGame = () => {
-        setGameActive(false);
-        onGameEnd(score);
-    };
-
-    const handleFinishGame = () => {
-        // Вызывается при нажатии на кнопку "Меню"
-        updateGameStats('third', score);
-        onGameEnd(score);
-        // Переходим на главный экран
-        router.push('/(tabs)');
-    };
-
-    return (
-        <View style={styles.container}>
-            {/* Шапка игры */}
-            <View style={styles.header}>
-                <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreText}>🏆 Очки: {score}</Text>
-                </View>
-                <View style={styles.roundContainer}>
-                    <Text style={styles.roundText}>🎯 Раунд: {round}/{totalRounds}</Text>
-                </View>
-                <TouchableOpacity style={styles.closeButton} onPress={handleEndGame}>
-                    <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Серия побед */}
-            {streak > 1 && (
-                <View style={styles.streakContainer}>
-                    <Text style={styles.streakText}>🔥 Серия побед: {streak}!</Text>
-                </View>
-            )}
-
-            {/* Основной экран игры */}
-            {gameActive && !gameCompleted && (
-                <View style={styles.gameArea}>
-                    <Text style={styles.title}>🎲 Угадай число на кубике!</Text>
-                    <Text style={styles.subtitle}>
-                        Угадайте какое число выпадет на кубике
-                    </Text>
-
-                    {/* Показываем текущий кубик */}
-                    <View style={styles.diceContainer}>
-                        <Text style={styles.diceLabel}>
-                            {isRolling ? 'Крутим кубик...' : 'Ваш кубик:'}
-                        </Text>
-                        <View style={[styles.dice, isRolling && styles.rollingDice]}>
-                            <Text style={styles.diceEmoji}>{DICE_EMOJIS[targetNumber - 1]}</Text>
-                            <Text style={styles.diceValue}>{targetNumber}</Text>
-                        </View>
-                        <Text style={styles.diceHint}>
-                            {isRolling ? 'Дождитесь остановки...' :
-                                playerGuess ? `Вы выбрали: ${playerGuess}` : 'Выберите число ниже!'}
-                        </Text>
-                    </View>
-
-                    {/* Кнопки для выбора числа */}
-                    <View style={styles.guessContainer}>
-                        <Text style={styles.guessTitle}>Выберите число:</Text>
-
-                        <View style={styles.numbersGrid}>
-                            {DICE_NUMBERS.map(number => (
-                                <TouchableOpacity
-                                    key={number}
-                                    style={[
-                                        styles.numberButton,
-                                        playerGuess === number && styles.numberButtonSelected,
-                                        (isRolling || showResult || playerGuess !== null) && styles.numberButtonDisabled
-                                    ]}
-                                    onPress={() => handleGuess(number)}
-                                    disabled={isRolling || showResult || playerGuess !== null || !gameActive}
-                                >
-                                    <Text style={styles.numberEmoji}>{DICE_EMOJIS[number - 1]}</Text>
-                                    <Text style={styles.numberText}>{number}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-
-                    {/* Правила */}
-                    <View style={styles.rulesContainer}>
-                        <Text style={styles.rulesTitle}>📖 Правила:</Text>
-                        <Text style={styles.rule}>• Угадайте, какое число выпадет на кубике</Text>
-                        <Text style={styles.rule}>• Нажмите на число от 1 до 6</Text>
-                        <Text style={styles.rule}>• Если угадали - получаете 18+ очков</Text>
-                        <Text style={styles.rule}>• Серия побед даёт бонусные очки</Text>
-                    </View>
-                </View>
-            )}
-
-            {/* Модальное окно результата раунда */}
-            {showResult && !gameCompleted && (
-                <View style={styles.resultModal}>
-                    <View style={[
-                        styles.resultContent,
-                        resultWin ? styles.resultWin : styles.resultLose
-                    ]}>
-                        <Text style={styles.resultTitle}>
-                            {resultWin ? '🎉 ПОБЕДА!' : '😢 ПОРАЖЕНИЕ'}
-                        </Text>
-
-                        <Text style={styles.resultMessage}>{resultMessage}</Text>
-
-                        <View style={styles.resultComparison}>
-                            <View style={styles.resultItem}>
-                                <Text style={styles.resultLabel}>Ваш выбор:</Text>
-                                <Text style={styles.resultEmoji}>{DICE_EMOJIS[(playerGuess || 1) - 1]}</Text>
-                                <Text style={styles.resultNumber}>{playerGuess || '—'}</Text>
-                            </View>
-
-                            <Text style={styles.vsText}>VS</Text>
-
-                            <View style={styles.resultItem}>
-                                <Text style={styles.resultLabel}>Выпало:</Text>
-                                <Text style={styles.resultEmoji}>{DICE_EMOJIS[targetNumber - 1]}</Text>
-                                <Text style={styles.resultNumber}>{targetNumber}</Text>
-                            </View>
-                        </View>
-
-                        <Text style={styles.resultScore}>
-                            {resultWin ? `+${15 + Math.floor(streak * 3)} очков` : '+0 очков'}
-                        </Text>
-
-                        {streak > 1 && resultWin && (
-                            <Text style={styles.resultStreak}>
-                                🔥 Серия побед: {streak}!
-                            </Text>
-                        )}
-
-                        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-                            <Text style={styles.continueButtonText}>
-                                {roundsPlayed + 1 < totalRounds ? 'Следующий раунд' : 'Завершить игру'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            )}
-
-            {/* Экран завершения игры */}
-            {gameCompleted && (
-                <View style={styles.gameOverContainer}>
-                    <View style={styles.scoreBoardContainer}>
-                        <Image source={scoreBoardImg} style={styles.scoreBoardImage} />
-                        <View style={styles.gameOverContent}>
-                            <Image source={winImg} style={styles.winImage} />
-                            
-                            <Text style={styles.finalScore}>Итоговый счет: {score} очков</Text>
-                            <Text style={styles.rewardText}>
-                                🎁 Награда: {Math.floor(score / 2)} дополнительных монет
-                            </Text>
-                            
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={styles.iconButton} onPress={() => {
-                                    setGameActive(true);
-                                    setGameCompleted(false);
-                                    handleEndGame();
-                                }}>
-                                    <Image source={restartIcon} style={styles.buttonIcon} />
-                                </TouchableOpacity>
-                                
-                                <TouchableOpacity style={styles.iconButton} onPress={handleFinishGame}>
-                                    <Image source={homeIcon} style={styles.buttonIcon} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-            )}
+  return (
+    <ImageBackground source={bgImg} style={styles.container} resizeMode="cover">
+      <View style={styles.headerContainer}>
+        <Image source={titleImg} style={styles.titleImage} />
+        <View style={styles.boardsRow}>
+          <View style={styles.scoreBoardWrapper}>
+            <Image source={scoreBoardImg} style={styles.scoreBoardImage} />
+            <Text style={styles.scoreBoardText}>Очки: {score}</Text>
+          </View>
+          <View style={styles.numberBoardWrapper}>
+            <Image source={numberBoardImg} style={styles.numberBoardImage} />
+            <Text style={styles.numberBoardText}>Раунд: {round}/10</Text>
+          </View>
         </View>
-    );
+      </View>
+
+      {gameActive && !gameCompleted && (
+        <View style={styles.mainContent}>
+          <TouchableOpacity style={styles.homeButton} onPress={handleHome}>
+            <Image source={homeIcon} style={styles.homeIcon} />
+          </TouchableOpacity>
+
+          <View style={styles.topSquareContainer}>
+            <Image source={SQUARE_IMAGES[topSquareNumber - 1]} style={[styles.topSquareContent, isRolling && styles.topSquareRolling]} />
+          </View>
+
+          <Image source={whichNumberImg} style={styles.whichNumberImage} />
+
+          {showBottomSquare && selectedNumber && (
+            <View style={[styles.bottomSquareContainer, styles.bottomSquareContainerActive]}>
+              <Image source={SQUARE_IMAGES[selectedNumber - 1]} style={styles.bottomSquareImage} />
+            </View>
+          )}
+
+          <View style={styles.buttonBoardContainer}>
+            <Image source={buttonBoardImg} style={styles.buttonBoardImage} />
+            <View style={styles.buttonsGrid}>
+              {[1, 2, 3, 4, 5, 6].map(number => {
+                const getButtonStyle = () => {
+                  const baseStyle: any[] = [styles.buttonWrapper];
+                  if (number === 1) baseStyle.push(styles.buttonWrapper1);
+                  if (number === 2) baseStyle.push(styles.buttonWrapper2);
+                  if (number === 3) baseStyle.push(styles.buttonWrapper3);
+                  if (number === 4) baseStyle.push(styles.buttonWrapper4);
+                  if (number === 5) baseStyle.push(styles.buttonWrapper5);
+                  if (number === 6) baseStyle.push(styles.buttonWrapper6);
+                  if (selectedNumber === number) baseStyle.push(styles.buttonWrapperSelected);
+                  if (isRolling || selectedNumber !== null) baseStyle.push(styles.buttonWrapperDisabled);
+                  return baseStyle;
+                };
+                return (
+                  <TouchableOpacity
+                    key={number}
+                    style={getButtonStyle()}
+                    onPress={() => handleButtonPress(number)}
+                    disabled={isRolling || selectedNumber !== null || !gameActive}
+                  >
+                    <Image source={BUTTON_IMAGES[number - 1]} style={styles.buttonImage} />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <Image source={happyHippoImg} style={styles.happyHippoImage} />
+          {showEmoji && (
+            <Text style={[styles.emojiDisplay, emojiType === 'happy' ? styles.emojiHappy : styles.emojiSad]}>
+              {emojiType === 'happy' ? '😊' : '😢'}
+            </Text>
+          )}
+        </View>
+      )}
+
+      {showResult && !gameCompleted && (
+        <View style={styles.resultModal}>
+          <View style={[styles.resultContent, resultWin ? styles.resultWin : styles.resultLose]}>
+            <Text style={styles.resultTitle}>{resultWin ? '🎉 ПОБЕДА!' : '😢 ПОРАЖЕНИЕ'}</Text>
+            <Text style={styles.resultMessage}>{resultWin ? `Вы выбрали ${selectedNumber}, выпало ${correctNumber}!` : `Вы выбрали ${selectedNumber}, выпало ${correctNumber}`}</Text>
+            <Text style={styles.resultScore}>{resultWin ? '+15 очков' : '+0 очков'}</Text>
+            <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+              <Text style={styles.continueButtonText}>{roundsPlayed + 1 < 10 ? 'Следующий раунд' : 'Завершить'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {gameCompleted && (
+        <View style={styles.gameOverModal}>
+          <View style={styles.gameOverContent}>
+            <Text style={styles.gameOverTitle}>Игра завершена!</Text>
+            <Text style={styles.gameOverScore}>Итоговый счет: {score}</Text>
+            <Text style={styles.gameOverGuessed}>Угадано: {guessedCount}/10</Text>
+            <TouchableOpacity style={styles.finishButton} onPress={handleHome}>
+              <Image source={homeIcon} style={styles.finishButtonIcon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </ImageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#1a1a1a',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 15,
-        backgroundColor: '#6D4C41',
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        flexWrap: 'wrap',
-    },
-    scoreContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 15,
-        marginVertical: 4,
-    },
-    scoreText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    roundContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 15,
-        marginVertical: 4,
-    },
-    roundText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    closeButton: {
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 4,
-    },
-    closeButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    streakContainer: {
-        backgroundColor: 'rgba(255, 87, 34, 0.2)',
-        padding: 10,
-        marginHorizontal: 20,
-        marginTop: 10,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#FF5722',
-        alignItems: 'center',
-    },
-    streakText: {
-        color: '#FF5722',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    gameArea: {
-        flex: 1,
-        padding: 20,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#FFD54F',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#BDBDBD',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    diceContainer: {
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    diceLabel: {
-        fontSize: 18,
-        color: '#fff',
-        marginBottom: 10,
-        fontWeight: '600',
-    },
-    dice: {
-        width: 120,
-        height: 120,
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
-        borderWidth: 4,
-        borderColor: '#6D4C41',
-        marginBottom: 10,
-    },
-    rollingDice: {
-        transform: [{ rotate: '360deg' }],
-    },
-    diceEmoji: {
-        fontSize: 56,
-        marginBottom: 5,
-    },
-    diceValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#6D4C41',
-    },
-    diceHint: {
-        fontSize: 14,
-        color: '#BDBDBD',
-        fontStyle: 'italic',
-    },
-    guessContainer: {
-        marginBottom: 25,
-    },
-    guessTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 15,
-    },
-    numbersGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 10,
-    },
-    numberButton: {
-        width: 70,
-        height: 70,
-        backgroundColor: '#424242',
-        borderRadius: 35,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
-        borderWidth: 2,
-        borderColor: 'transparent',
-    },
-    numberButtonSelected: {
-        backgroundColor: '#388E3C',
-        borderColor: '#4CAF50',
-        transform: [{ scale: 1.1 }],
-    },
-    numberButtonDisabled: {
-        opacity: 0.5,
-    },
-    numberEmoji: {
-        fontSize: 32,
-        marginBottom: 2,
-    },
-    numberText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    rulesContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        padding: 15,
-        borderRadius: 15,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-    },
-    rulesTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#FFD54F',
-        marginBottom: 10,
-    },
-    rule: {
-        fontSize: 14,
-        color: '#E0E0E0',
-        marginBottom: 5,
-        marginLeft: 10,
-    },
-    resultModal: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    resultContent: {
-        padding: 30,
-        borderRadius: 20,
-        alignItems: 'center',
-        width: '100%',
-        maxWidth: 400,
-    },
-    resultWin: {
-        backgroundColor: '#E8F5E9',
-        borderWidth: 3,
-        borderColor: '#4CAF50',
-    },
-    resultLose: {
-        backgroundColor: '#FFEBEE',
-        borderWidth: 3,
-        borderColor: '#F44336',
-    },
-    resultTitle: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 15,
-    },
-    resultMessage: {
-        fontSize: 18,
-        textAlign: 'center',
-        marginBottom: 20,
-        color: '#424242',
-    },
-    resultComparison: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 20,
-        gap: 25,
-    },
-    resultItem: {
-        alignItems: 'center',
-    },
-    resultLabel: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 5,
-    },
-    resultEmoji: {
-        fontSize: 48,
-        marginBottom: 5,
-    },
-    resultNumber: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#6D4C41',
-    },
-    vsText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#FF5722',
-    },
-    resultScore: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FF9800',
-        marginTop: 10,
-    },
-    resultStreak: {
-        fontSize: 16,
-        color: '#FF5722',
-        marginTop: 5,
-        fontWeight: '600',
-    },
-    continueButton: {
-        backgroundColor: '#6D4C41',
-        paddingHorizontal: 40,
-        paddingVertical: 15,
-        borderRadius: 25,
-        marginTop: 25,
-    },
-    continueButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    gameOverContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    scoreBoardContainer: {
-        width: '100%',
-        maxWidth: 400,
-        aspectRatio: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-    },
-    scoreBoardImage: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        resizeMode: 'contain',
-    },
-    scoreBoardBg: {
-        width: '100%',
-        maxWidth: 400,
-        aspectRatio: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    gameOverContent: {
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: 30,
-        zIndex: 1,
-    },
-    winImage: {
-        width: 200,
-        height: 80,
-        marginBottom: 15,
-    },
-    finalScore: {
-        fontSize: 24,
-        color: '#FF9800',
-        marginBottom: 10,
-        fontWeight: '600',
-        textAlign: 'center',
-    },
-    rewardText: {
-        fontSize: 18,
-        color: '#4CAF50',
-        marginBottom: 20,
-        textAlign: 'center',
-        fontWeight: '600',
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        gap: 20,
-        justifyContent: 'center',
-    },
-    iconButton: {
-        width: 70,
-        height: 70,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonIcon: {
-        width: 100,
-        height: 100,
-        resizeMode: 'contain',
-    },
-    menuButton: {
-        backgroundColor: '#6D4C41',
-        paddingHorizontal: 50,
-        paddingVertical: 15,
-        borderRadius: 25,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    menuButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    playAgainButton: {
-        backgroundColor: '#6D4C41',
-        paddingHorizontal: 40,
-        paddingVertical: 15,
-        borderRadius: 25,
-    },
-    playAgainText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  container: { flex: 1 },
+  headerContainer: { flexDirection: 'column', alignItems: 'center', paddingHorizontal: '5%', paddingTop: '5%', paddingBottom: '2%' },
+  boardsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: '2%' },
+  scoreBoardWrapper: { width: '28%', aspectRatio: 1.2, justifyContent: 'center', alignItems: 'center' },
+  scoreBoardImage: { width: '100%', height: '100%', resizeMode: 'contain', position: 'absolute' },
+  scoreBoardText: { fontSize: 11, fontWeight: 'bold', color: '#FFE4A1', textAlign: 'center', zIndex: 1 , marginLeft: '12%'},
+  titleImage: { width: '70%', height: '20%', resizeMode: 'contain' },
+  numberBoardWrapper: { width: '28%', aspectRatio: 1.2, justifyContent: 'center', alignItems: 'center' },
+  numberBoardImage: { width: '100%', height: '100%', resizeMode: 'contain', position: 'absolute' },
+  numberBoardText: { fontSize: 11, fontWeight: 'bold', color: '#FFE4A1', textAlign: 'center', zIndex: 1 },
+  mainContent: { flex: 1, justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: '5%', paddingVertical: '2%' },
+  topSquareContainer: { width: '45%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-15%' },
+  topSquareContent: { width: '100%', height: '100%', resizeMode: 'contain', zIndex: 1 },
+  topSquareRolling: { opacity: 0.8 },
+  whichNumberImage: { width: '100%', height: '100%', resizeMode: 'contain', marginVertical: '1%', marginTop: '-65%' },
+  bottomSquareContainer: { width: '30%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginVertical: '2%', marginTop: '-10%', position: 'absolute', bottom: '35%' },
+  bottomSquareContainerActive: { bottom: '45%' },
+  bottomSquareImage: { width: '100%', height: '100%', resizeMode: 'contain' },
+  buttonBoardContainer: { width: '100%', height: '18%', justifyContent: 'center', alignItems: 'center', marginBottom: '10%',  },
+  buttonBoardImage: { width: '100%', height: '100%', resizeMode: 'contain', position: 'absolute', marginTop: '-52%' },
+  buttonsGrid: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '1.5%', width: '82%', height: '85%', marginTop: '-52%', zIndex: 5 },
+  buttonWrapper: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', zIndex: 5 },
+  buttonWrapper1: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-4%' },
+  buttonWrapper2: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-5%' },
+  buttonWrapper3: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-5%' },
+  buttonWrapper4: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-7%' },
+  buttonWrapper5: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-6%' },
+  buttonWrapper6: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginTop: '-5%', transform: [{ scale: 1.15 }] },
+  buttonWrapperSelected: { transform: [{ scale: 1.15 }] },
+  buttonWrapperDisabled: { opacity: 0.6 },
+  buttonImage: { width: '100%', height: '100%', resizeMode: 'contain' },
+  happyHippoImage: { position: 'absolute', bottom: '-55%', left: '1%', width: '38%', aspectRatio: 1, resizeMode: 'contain',},
+  homeButton: { position: 'absolute', bottom: '-1%', left: '35%', width: '40%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', zIndex: 20 },
+  homeIcon: { width: '100%', height: '100%', resizeMode: 'contain' },
+  resultModal: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
+  resultContent: { width: '80%', paddingHorizontal: '5%', paddingVertical: '8%', borderRadius: 20, alignItems: 'center' },
+  resultWin: { backgroundColor: '#E8F5E9', borderWidth: 3, borderColor: '#4CAF50' },
+  resultLose: { backgroundColor: '#FFEBEE', borderWidth: 3, borderColor: '#F44336' },
+  resultTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: '3%' },
+  resultMessage: { fontSize: 16, textAlign: 'center', marginBottom: '3%', color: '#424242' },
+  resultScore: { fontSize: 20, fontWeight: 'bold', color: '#FF9800', marginBottom: '5%' },
+  continueButton: { backgroundColor: '#6D4C41', paddingHorizontal: '10%', paddingVertical: '3%', borderRadius: 15 },
+  continueButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  gameOverModal: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
+  gameOverContent: { width: '80%', backgroundColor: '#F5DEB3', paddingHorizontal: '5%', paddingVertical: '8%', borderRadius: 20, alignItems: 'center', borderWidth: 3, borderColor: '#8B7355' },
+  gameOverTitle: { fontSize: 28, fontWeight: 'bold', color: '#7A4A1F', marginBottom: '5%' },
+  gameOverScore: { fontSize: 24, fontWeight: 'bold', color: '#FF9800', marginBottom: '8%' },
+  finishButton: { justifyContent: 'center', alignItems: 'center', borderRadius: 15, width: 120, height: 120, marginTop: '5%' },
+  finishButtonIcon: { width: 120, height: 120, resizeMode: 'contain' },
+  emojiDisplay: { position: 'absolute', fontSize: 60, top: '25%', zIndex: 50 },
+  emojiHappy: { color: '#4CAF50' },
+  emojiSad: { color: '#F44336' },
+  gameOverGuessed: { fontSize: 20, fontWeight: 'bold', color: '#FF9800', marginBottom: '5%' },
 });
