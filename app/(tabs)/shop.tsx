@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 450, // НАСТРОЙКА: увеличено для опускания бегемотика
+    paddingTop: 400, // НАСТРОЙКА: увеличено для опускания бегемотика
   },
   // ===== КАТЕГОРИИ СПРАВА =====
   categoriesPanel: {

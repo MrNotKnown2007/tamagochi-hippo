@@ -126,9 +126,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 24,
-    gap: 16,
+    paddingHorizontal: 40,
+    width: '100%',
   },
   arrowButton: {
     width: 90,

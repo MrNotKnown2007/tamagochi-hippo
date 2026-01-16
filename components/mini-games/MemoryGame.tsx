@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
         padding: 8,
         gap: 4,
         flex: 1,
-        marginTop: 270,
+        marginTop: 80,
     },
     card: {
         width: (width - 40) / 5 - 4,

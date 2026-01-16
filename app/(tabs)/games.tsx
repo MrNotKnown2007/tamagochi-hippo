@@ -3,13 +3,13 @@ import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    ImageBackground,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    View
+  Alert,
+  Image,
+  ImageBackground,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  View
 } from 'react-native';
 // Импорты компонентов
 import EnergyBar from '@/components/mini-games/EnergyBar';
@@ -188,7 +188,7 @@ export default function GamesScreen() {
         </View>
 
         {/* СТРЕЛКИ НАВИГАЦИИ - ВНИЗУ */}
-        <View style={styles.contentPadding}>
+        <View style={styles.navigationWrapper}>
           <NavigationArrows
             onPrevious={handlePrevious}
             onNext={handleNext}
@@ -249,10 +249,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 40,
-    paddingBottom: 60,
+    paddingBottom: 100,
   },
   contentPadding: {
     paddingHorizontal: 20,
+  },
+  navigationWrapper: {
+    paddingHorizontal: 20,
+    marginTop: -20,
   },
   headerSection: {
     alignItems: 'center',
